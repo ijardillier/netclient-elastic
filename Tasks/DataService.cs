@@ -15,15 +15,17 @@ namespace NetCoreClient.Elk.Tasks
 
         private readonly MetricServer _metricServer = new MetricServer(port: 9091);
         private readonly Random _random = new Random();
-        private static readonly Gauge Gauge1 = Metrics.CreateGauge("myapp_gauge1_value", "A simple gauge 1");
-        private static readonly Gauge Gauge2 = Metrics.CreateGauge("myapp_gauge2_value", "A simple gauge 2");
-        private static readonly Gauge Gauge3 = Metrics.CreateGauge("myapp_gauge3_value", "A simple gauge 3");
-        private static readonly Gauge Gauge4 = Metrics.CreateGauge("myapp_gauge4_value", "A simple gauge 4");
-        private static readonly Gauge Gauge5 = Metrics.CreateGauge("myapp_gauge5_value", "A simple gauge 5");
-        private static readonly Gauge Gauge6 = Metrics.CreateGauge("myapp_gauge6_value", "A simple gauge 6");
-        private static readonly Gauge Gauge7 = Metrics.CreateGauge("myapp_gauge7_value", "A simple gauge 7");
-        private static readonly Gauge Gauge8 = Metrics.CreateGauge("myapp_gauge8_value", "A simple gauge 8");
-        private static readonly Gauge Gauge9 = Metrics.CreateGauge("myapp_gauge9_value", "A simple gauge 9");
+
+        private static readonly GaugeConfiguration configuration = new GaugeConfiguration { LabelNames = new[] { "service" }};
+        private static readonly Gauge Gauge1 = Metrics.CreateGauge("myapp_gauge1", "A simple gauge 1", configuration);
+        private static readonly Gauge Gauge2 = Metrics.CreateGauge("myapp_gauge2", "A simple gauge 2", configuration);
+        private static readonly Gauge Gauge3 = Metrics.CreateGauge("myapp_gauge3", "A simple gauge 3", configuration);
+        private static readonly Gauge Gauge4 = Metrics.CreateGauge("myapp_gauge4", "A simple gauge 4", configuration);
+        private static readonly Gauge Gauge5 = Metrics.CreateGauge("myapp_gauge5", "A simple gauge 5", configuration);
+        private static readonly Gauge Gauge6 = Metrics.CreateGauge("myapp_gauge6", "A simple gauge 6", configuration);
+        private static readonly Gauge Gauge7 = Metrics.CreateGauge("myapp_gauge7", "A simple gauge 7", configuration);
+        private static readonly Gauge Gauge8 = Metrics.CreateGauge("myapp_gauge8", "A simple gauge 8", configuration);
+        private static readonly Gauge Gauge9 = Metrics.CreateGauge("myapp_gauge9", "A simple gauge 9", configuration);
   
         public DataService(IOptions<Settings> settings, ILogger<DataService> logger)
         {
@@ -67,15 +69,15 @@ namespace NetCoreClient.Elk.Tasks
         {
             _logger.LogDebug("{Source} is sending data.", nameof(DataService));
 
-            Gauge1.Set(_random.Next(1000, 1500));
-            Gauge2.Set(_random.Next(2000, 2500));
-            Gauge3.Set(_random.Next(3000, 3500));
-            Gauge4.Set(_random.Next(4000, 4500));
-            Gauge5.Set(_random.Next(5000, 5500));
-            Gauge6.Set(_random.Next(6000, 6500));
-            Gauge7.Set(_random.Next(7000, 7500));
-            Gauge8.Set(_random.Next(8000, 8500));
-            Gauge9.Set(_random.Next(9000, 9500));
+            Gauge1.WithLabels("service1").Set(_random.Next(1000, 1500));
+            Gauge2.WithLabels("service1").Set(_random.Next(2000, 2500));
+            Gauge3.WithLabels("service1").Set(_random.Next(3000, 3500));
+            Gauge4.WithLabels("service2").Set(_random.Next(4000, 4500));
+            Gauge5.WithLabels("service2").Set(_random.Next(5000, 5500));
+            Gauge6.WithLabels("service2").Set(_random.Next(6000, 6500));
+            Gauge7.WithLabels("service3").Set(_random.Next(7000, 7500));
+            Gauge8.WithLabels("service3").Set(_random.Next(8000, 8500));
+            Gauge9.WithLabels("service3").Set(_random.Next(9000, 9500));
 
             _logger.LogInformation("{Source} has sent some data", nameof(DataService));            
         }
