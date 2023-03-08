@@ -1,9 +1,7 @@
 ﻿using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Hosting;
-using Serilog;
 using NetClient.Elastic.Extensions;
+using Serilog;
 
 namespace NetClient.Elastic
 {
@@ -16,7 +14,8 @@ namespace NetClient.Elastic
 
         public static IHost BuildHost(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureLogging((host, builder) => builder.ClearProviders().UseSerilog(host.Configuration).AddSerilog())
+                .ConfigureLogging((host, builder) => builder.ClearProviders().AddSerilog(host.Configuration))
+                .UseSerilog()
                 .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                 .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
                 .Build();

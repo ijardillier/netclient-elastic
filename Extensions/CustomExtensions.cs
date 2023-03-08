@@ -1,7 +1,4 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace NetClient.Elastic.Extensions
@@ -17,11 +14,13 @@ namespace NetClient.Elastic.Extensions
             return services;
         }
 
-        public static ILoggingBuilder UseSerilog(this ILoggingBuilder builder, IConfiguration configuration)
+        public static ILoggingBuilder AddSerilog(this ILoggingBuilder builder, IConfiguration configuration)
         {
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
+
+            builder.AddSerilog();
 
             return builder;
         }

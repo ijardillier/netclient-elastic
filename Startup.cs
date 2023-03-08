@@ -1,10 +1,9 @@
 ﻿using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using NetClient.Elastic.Extensions;
 using NetClient.Elastic.Tasks;
+using Serilog;
 
 namespace NetClient.Elastic
 {
@@ -34,6 +33,7 @@ namespace NetClient.Elastic
         public void Configure(IApplicationBuilder app)
         {
             app.UseRouting();
+            app.UseSerilogRequestLogging();
 
             app.UseEndpoints(endpoints =>
             {
