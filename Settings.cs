@@ -1,4 +1,4 @@
-﻿namespace NetCoreClient.Elk
+﻿namespace NetClient.Elastic
 {
     public class Settings
     {

@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using NetCoreClient.Elk.Extensions;
-using NetCoreClient.Elk.Tasks;
+using NetClient.Elastic.Extensions;
+using NetClient.Elastic.Tasks;
 
-namespace NetCoreClient.Elk
+namespace NetClient.Elastic
 {
     public class Startup
     {

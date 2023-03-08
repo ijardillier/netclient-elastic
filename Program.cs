@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using NetCoreClient.Elk.Extensions;
+using NetClient.Elastic.Extensions;
 
-namespace NetCoreClient.Elk
+namespace NetClient.Elastic
 {
     public class Program
     {

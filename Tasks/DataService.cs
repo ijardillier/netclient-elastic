@@ -6,7 +6,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NetCoreClient.Elk.Tasks
+namespace NetClient.Elastic.Tasks
 {
     public class DataService : BackgroundService
     {

@@ -1,14 +1,14 @@
-﻿FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine AS base
+﻿FROM mcr.microsoft.com/dotnet/core/aspnet:6.0-alpine AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 9091
 
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-alpine AS build
+FROM mcr.microsoft.com/dotnet/core/sdk:6.0-alpine AS build
 WORKDIR /src
 
-COPY NetCoreClient.Elk.csproj src/NetCoreClient.Elk/
+COPY NetClient.Elastic.csproj src/NetClient.Elastic/
 
-RUN dotnet restore src/NetCoreClient.Elk/NetCoreClient.Elk.csproj
+RUN dotnet restore src/NetClient.Elastic/NetClient.Elastic.csproj
 
 COPY . .
 WORKDIR /src
@@ -19,4 +19,4 @@ FROM build AS publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app .
-ENTRYPOINT ["dotnet", "NetCoreClient.Elk.dll"]
+ENTRYPOINT ["dotnet", "NetClient.Elastic.dll"]

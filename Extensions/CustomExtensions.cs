@@ -4,7 +4,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
-namespace NetCoreClient.Elk.Extensions
+namespace NetClient.Elastic.Extensions
 {
     public static class CustomExtensions
     {   

@@ -1,4 +1,6 @@
 {
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
         {
@@ -7,15 +9,11 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/NetCoreClient.Elk.csproj",
+                "${workspaceFolder}/NetClient.Elastic.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
-            "problemMatcher": "$msCompile",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "problemMatcher": "$msCompile"
         },
         {
             "label": "publish",
@@ -23,7 +21,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/NetCoreClient.Elk.csproj",
+                "${workspaceFolder}/NetClient.Elastic.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -36,9 +34,8 @@
             "args": [
                 "watch",
                 "run",
-                "${workspaceFolder}/NetCoreClient.Elk.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "--project",
+                "${workspaceFolder}/NetClient.Elastic.csproj"
             ],
             "problemMatcher": "$msCompile"
         },
@@ -49,14 +46,14 @@
                 "build"
             ],
             "dockerBuild": {
-                "tag": "netcoreclientelk:dev",
+                "tag": "netclient-elastic:dev",
                 "target": "base",
                 "dockerfile": "${workspaceFolder}/Dockerfile",
                 "context": "${workspaceFolder}",
                 "pull": true
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/NetCoreClient.Elk.csproj"
+                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj"
             }
         },
         {
@@ -66,13 +63,13 @@
                 "build"
             ],
             "dockerBuild": {
-                "tag": "netcoreclientelk:latest",
+                "tag": "netclient-elastic:latest",
                 "dockerfile": "${workspaceFolder}/Dockerfile",
                 "context": "${workspaceFolder}",
                 "pull": true
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/NetCoreClient.Elk.csproj"
+                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj"
             }
         },
         {
@@ -81,9 +78,14 @@
             "dependsOn": [
                 "docker-build: debug"
             ],
-            "dockerRun": {},
+            "dockerRun": {
+                "ports": [
+                    { "hostPort": 8080, "containerPort": 80 },
+                    { "hostPort": 9091, "containerPort": 9091 }
+                ]
+            },
             "netCore": {
-                "appProject": "${workspaceFolder}/NetCoreClient.Elk.csproj",
+                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj",
                 "enableDebugging": true
             }
         },
@@ -93,9 +95,14 @@
             "dependsOn": [
                 "docker-build: release"
             ],
-            "dockerRun": {},
+            "dockerRun": {
+                "ports": [
+                    { "hostPort": 8080, "containerPort": 80 },
+                    { "hostPort": 9091, "containerPort": 9091 }
+                ]
+            },
             "netCore": {
-                "appProject": "${workspaceFolder}/NetCoreClient.Elk.csproj"
+                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj"
             }
         }
     ]
