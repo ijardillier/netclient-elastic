@@ -79,6 +79,7 @@
                 "docker-build: debug"
             ],
             "dockerRun": {
+                "containerName": "netclient-elastic",
                 "ports": [
                     { "hostPort": 8080, "containerPort": 80 },
                     { "hostPort": 9091, "containerPort": 9091 }
@@ -87,7 +88,7 @@
             "netCore": {
                 "appProject": "${workspaceFolder}/NetClient.Elastic.csproj",
                 "enableDebugging": true
-            }
+            },
         },
         {
             "type": "docker-run",
@@ -96,6 +97,7 @@
                 "docker-build: release"
             ],
             "dockerRun": {
+                "containerName": "netclient-elastic",
                 "ports": [
                     { "hostPort": 8080, "containerPort": 80 },
                     { "hostPort": 9091, "containerPort": 9091 }

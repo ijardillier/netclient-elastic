@@ -49,10 +49,19 @@
             "request": "attach"
         },
         {
-            "name": "Docker .NET Core Launch",
+            "name": "Docker .NET Launch (Development)",
             "type": "docker",
             "request": "launch",
             "preLaunchTask": "docker-run: debug",
+            "netCore": {
+                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj"
+            }
+        }        ,
+        {
+            "name": "Docker .NET Launch (Production)",
+            "type": "docker",
+            "request": "launch",
+            "preLaunchTask": "docker-run: release",
             "netCore": {
                 "appProject": "${workspaceFolder}/NetClient.Elastic.csproj"
             }
