@@ -83,7 +83,10 @@
                 "ports": [
                     { "hostPort": 8080, "containerPort": 80 },
                     { "hostPort": 9091, "containerPort": 9091 }
-                ]
+                ],
+                "env": {
+                    "ASPNETCORE_ENVIRONMENT":"Development"
+                }
             },
             "netCore": {
                 "appProject": "${workspaceFolder}/NetClient.Elastic.csproj",
@@ -101,10 +104,27 @@
                 "ports": [
                     { "hostPort": 8080, "containerPort": 80 },
                     { "hostPort": 9091, "containerPort": 9091 }
+                ],
+                "volumes": [
+                    {
+                        "localPath": "${userHome}/.vsdbg",
+                        "containerPath": "/remote_debugger",
+                        "permissions": "ro"
+                    }
+                ],
+                "env": {
+                    "ASPNETCORE_ENVIRONMENT":"Production",
+                },
+                "extraHosts": [
+                    {
+                        "hostname": "host.docker.internal",
+                        "ip": "host-gateway"
+                    }
                 ]
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj"
+                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj",
+                "enableDebugging": false
             }
         }
     ]
