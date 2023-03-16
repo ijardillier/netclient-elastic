@@ -1,4 +1,4 @@
-﻿using Elastic.Apm.NetCoreAll;
+﻿// using Elastic.Apm.NetCoreAll;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -33,7 +33,7 @@ namespace NetClient.Elastic
         /// <param name="app">The application builder.</param>
         public void Configure(IApplicationBuilder app)
         {
-            app.UseAllElasticApm(Configuration);
+            //app.UseAllElasticApm(Configuration);
             app.UseRouting();
             app.UseSerilogRequestLogging();
 
