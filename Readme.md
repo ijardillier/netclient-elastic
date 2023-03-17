@@ -3,12 +3,13 @@
 The purpose of this application is to show how to integrate:
 
 - logs (via Serilog)
-- metrics (via Prometheus) 
-- Elastic APM (traces)
+- health checks (via Microsoft AspNetCore HealthChecks)
+- business metrics (via Prometheus) 
+- traces (via Elastic APM or OpenTelemetry)
   
 to an Elasticsearch cluster with .Net.
 
-# Logs
+# Logs (via Serilog)
 
 This application uses [Serilog](https://serilog.net/) to properly format logs.
 
@@ -165,3 +166,134 @@ In Development, generally, we won't want to display our logs in JSON format and 
             ]
         }
     }
+
+## Sending logs to Elasticsearch
+
+All the logs are written in the console, so they will be readable by using:
+
+    docker container logs netcore-client
+
+To send the logs to Elasticseach, you will have to configure a filebeat agent with docker autodiscover for example.
+
+    filebeat.autodiscover:
+        providers:
+            - type: docker
+            hints.enabled: true
+            hints.default_config:
+                type: container
+                paths:
+                - /var/lib/docker/containers/${data.container.id}/*.log
+
+For more information about this filebeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/filebeat/config/filebeat.yml
+
+# Health checks (via Microsoft AspNetCore HealthChecks)
+
+This application uses [Health Checks](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-6.0) to report the health of app infrastructure components.
+
+## Healthchecks
+
+ASP.NET Core offers Health Checks Middleware and libraries for reporting the health of app infrastructure components.
+
+Health checks are exposed by an app as HTTP endpoints. Health check endpoints can be configured for various real-time monitoring scenarios:
+
+- Health probes can be used by container orchestrators and load balancers to check an app's status. For example, a container orchestrator may respond to a failing health check by halting a rolling deployment or restarting a container. A load balancer might react to an unhealthy app by routing traffic away from the failing instance to a healthy instance.
+- Use of memory, disk, and other physical server resources can be monitored for healthy status.
+- Health checks can test an app's dependencies, such as databases and external service endpoints, to confirm availability and normal functioning.
+
+Health checks are typically used with an external monitoring service or container orchestrator to check the status of an app. Before adding health checks to an app, decide on which monitoring system to use. The monitoring system dictates what types of health checks to create and how to configure their endpoints.
+
+Source : [Health checks in ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/health-checks?view=aspnetcore-6.0)
+
+## NuGet packages
+
+### Xabaril NuGet packages
+
+The following Xabaril NuGet package is used:
+
+- [AspNetCore.HealthChecks.UI.Client](https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks#configuration)
+
+    Formats healthchecks endpoint response in a JSON representation.
+
+## Implementation
+
+### NuGet packages
+
+You have to add the following packages in your csproj file.
+
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.5" />
+
+You can update the version to the latest available for your .Net version.
+
+### HealthCheck service registration
+
+The first step is to register the HealthCheck Service. This is done here in a custom extension which is used in the ConfigureServices of the Startup file.
+
+    public virtual void ConfigureServices(IServiceCollection services)
+    {
+        // ...
+        services.AddCustomHealthCheck(Configuration)
+        // ...     
+    }
+
+    public static IServiceCollection AddCustomHealthCheck(this IServiceCollection services, IConfiguration configuration)
+    {
+        IHealthChecksBuilder hcBuilder = services.AddHealthChecks();
+        hcBuilder.AddCheck("self", () => HealthCheckResult.Healthy());
+        return services;
+    }
+
+This "self" check is just here to say that if the endpoint responds, that's because the application is alive.
+
+### HealthCheck endpoints maps
+
+The second step is to map endpoints for health checks.
+
+    public void Configure(IApplicationBuilder app)
+    {
+        app.UseRouting();
+        // ...
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
+            {
+                Predicate = r => r.Name.Contains("self")
+            });
+            endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+        });
+    }
+
+The first map exposes the /liveness endpoint with the self check described in the previous section.
+
+The result of a call to http://localhost:8080/liveness will just be :
+
+    Status code : 200 (Ok)
+    Content : Healthy
+
+The second map exposes the /hc endpoint with an aggregation of all healthchecks defined in a JSON format.
+
+The result of a call to http://localhost:8080/hc will be :
+
+    Status code : 200 (Ok)
+    Content : {"status":"Healthy","totalDuration":"00:00:00.0027779","entries":{"self":{"data":{},"duration":"00:00:00.0008869","status":"Healthy","tags":[]}}}
+
+## Sending healthchecks to Elasticsearch
+
+All the healthchecks are available on the /hc endpoint.
+
+To send the healthchecks to Elasticseach, you will have to configure a metricbeat agent with docker autodiscover for example.
+
+    metricbeat.modules:
+    - module: http
+      metricsets:
+      - json
+      period: 10s
+      hosts: ["localhost:8080"]
+      namespace: "aspnet_healthchecks"
+      path: "/hc"
+  
+For more information about this metricbeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/metricbeat/config/metricbeat.yml

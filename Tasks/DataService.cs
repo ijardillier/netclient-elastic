@@ -69,15 +69,15 @@ namespace NetClient.Elastic.Tasks
         {
             _logger.LogDebug("{Source} is sending data.", nameof(DataService));
 
-            Gauge1.WithLabels("service1").Set(_random.Next(1000, 1500));
-            Gauge2.WithLabels("service1").Set(_random.Next(2000, 2500));
-            Gauge3.WithLabels("service1").Set(_random.Next(3000, 3500));
-            Gauge4.WithLabels("service2").Set(_random.Next(4000, 4500));
-            Gauge5.WithLabels("service2").Set(_random.Next(5000, 5500));
-            Gauge6.WithLabels("service2").Set(_random.Next(6000, 6500));
-            Gauge7.WithLabels("service3").Set(_random.Next(7000, 7500));
-            Gauge8.WithLabels("service3").Set(_random.Next(8000, 8500));
-            Gauge9.WithLabels("service3").Set(_random.Next(9000, 9500));
+            Gauge1.WithLabels("service1").Set(_random.Next(1000, 2000));
+            Gauge2.WithLabels("service1").Set(_random.Next(2000, 3000));
+            Gauge3.WithLabels("service1").Set(_random.Next(3000, 4000));
+            Gauge4.WithLabels("service2").Set(_random.Next(4000, 5000));
+            Gauge5.WithLabels("service2").Set(_random.Next(5000, 6000));
+            Gauge6.WithLabels("service2").Set(_random.Next(6000, 7000));
+            Gauge7.WithLabels("service3").Set(_random.Next(7000, 8000));
+            Gauge8.WithLabels("service3").Set(_random.Next(8000, 9000));
+            Gauge9.WithLabels("service3").Set(_random.Next(9000, 10000));
 
             _logger.LogInformation("{Source} has sent some data", nameof(DataService));            
         }
