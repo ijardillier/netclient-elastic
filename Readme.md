@@ -146,7 +146,7 @@ The configuration (for Production environment) will :
 
 #### Development environment
 
-In Development, generally, we won't want to display our logs in JSON format, with minimal information and we will prefer having log level to Debug, so, we will override this in the appsettings.Development.json file.
+In Development, generally, we won't want to display our logs in JSON format and we will prefer having log level to Debug and minimal information, so, we will override this in the appsettings.Development.json file.
 
     {
         "Serilog": {
