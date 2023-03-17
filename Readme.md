@@ -1,3 +1,26 @@
+- [Context](#context)
+- [Logs (via Serilog)](#logs-via-serilog)
+  - [NuGet packages](#nuget-packages)
+    - [Serilog NuGet packages](#serilog-nuget-packages)
+    - [Elastic NuGet packages](#elastic-nuget-packages)
+  - [Implementation](#implementation)
+    - [NuGet packages](#nuget-packages-1)
+    - [Serilog provider](#serilog-provider)
+    - [Serilog HTTP Request logging](#serilog-http-request-logging)
+    - [Serilog configuration](#serilog-configuration)
+      - [Production environment](#production-environment)
+      - [Development environment](#development-environment)
+  - [Sending logs to Elasticsearch](#sending-logs-to-elasticsearch)
+- [Health checks (via Microsoft AspNetCore HealthChecks)](#health-checks-via-microsoft-aspnetcore-healthchecks)
+  - [Healthchecks](#healthchecks)
+  - [NuGet packages](#nuget-packages-2)
+    - [Xabaril NuGet packages](#xabaril-nuget-packages)
+  - [Implementation](#implementation-1)
+    - [NuGet packages](#nuget-packages-3)
+    - [HealthCheck service registration](#healthcheck-service-registration)
+    - [HealthCheck endpoints maps](#healthcheck-endpoints-maps)
+  - [Sending healthchecks to Elasticsearch](#sending-healthchecks-to-elasticsearch)
+
 # Context
 
 The purpose of this application is to show how to integrate:
