@@ -6,7 +6,7 @@ The purpose of this application is to show how to integrate:
 - metrics (via Prometheus) 
 - Elastic APM (traces)
   
-  to an Elasticsearch cluster with .Net.
+to an Elasticsearch cluster with .Net.
 
 # Logs
 
@@ -36,7 +36,7 @@ Following Serilog NuGet packages are used to immplement logging:
 
 ### Elastic NuGet packages
 
-The following Elastic NuGet ackage is used to properly format logs for Elasticsearch:
+The following Elastic NuGet package is used to properly format logs for Elasticsearch:
 
 - [Elastic.CommonSchema.Serilog](https://github.com/elastic/ecs-dotnet)
 
@@ -73,15 +73,15 @@ In your Program.cs file, add the ConfigureLogging and UseSerilog as described be
 The UseSerilog method sets Serilog as the logging provider. The AddSerilog method is a custom extension which will add Serilog to the logging pipeline and read the configuration from host configuration :
 
     public static ILoggingBuilder AddSerilog(this ILoggingBuilder builder, IConfiguration configuration)
-        {
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
-                .CreateLogger();
+    {
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(configuration)
+            .CreateLogger();
 
-            builder.AddSerilog();
+        builder.AddSerilog();
 
-            return builder;
-        }
+        return builder;
+    }
 
 ### Serilog HTTP Request logging
 
@@ -90,17 +90,17 @@ When using the default middleware for HTTP request logging, it will write HTTP r
 Add this in Startup.cs before any handlers whose activities should be logged.
 
     public void Configure(IApplicationBuilder app)
+    {
+        app.UseRouting();
+        app.UseSerilogRequestLogging();
+
+        app.UseEndpoints(endpoints =>
         {
-            app.UseRouting();
-            app.UseSerilogRequestLogging();
+            /// ...
+        });
 
-            app.UseEndpoints(endpoints =>
-            {
-                /// ...
-            });
-
-            // ...
-        }
+        // ...
+    }
 
 ### Serilog configuration 
 
@@ -108,12 +108,7 @@ As the Serilog configuration is read from host configuration, we will now set al
 
 #### Production environment
 
-The configuration (for Production environment) will :
-
-- set default log level to Warning except for "Microsoft.Hosting" "NetClient.Elastic" (our application) namespaces which will be Information
-- enrich log with log context, machine name, and some other useful data when available
-- add custom properties to each log event : Domain and DomainContext
-- write logs to console, using the Elastic JSON formatter for Serilog
+In Production environment, we will prepare our logs for Elasticsearch ingestion, so use JSON format and add all needed information to ou logs. 
 
     {
         "Serilog": {
@@ -141,6 +136,13 @@ The configuration (for Production environment) will :
         },
         // ...
     }
+
+The configuration (for Production environment) will :
+
+- set default log level to Warning except for "Microsoft.Hosting" "NetClient.Elastic" (our application) namespaces which will be Information
+- enrich log with log context, machine name, and some other useful data when available
+- add custom properties to each log event : Domain and DomainContext
+- write logs to console, using the Elastic JSON formatter for Serilog
 
 #### Development environment
 
