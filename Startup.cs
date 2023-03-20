@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using NetClient.Elastic.Extensions;
 using NetClient.Elastic.Tasks;
+using Prometheus;
 using Serilog;
 
 namespace NetClient.Elastic
@@ -25,6 +26,16 @@ namespace NetClient.Elastic
                 .AddOptions()
                 .AddCustomHealthCheck(Configuration)
                 .AddHostedService<DataService>();        
+
+            // Suppress default metrics
+            Metrics.SuppressDefaultMetrics();
+
+            // Defines statics labels for metrics
+            Metrics.DefaultRegistry.SetStaticLabels(new Dictionary<string, string>
+            {
+                { "domain", "NetClient" },
+                { "domain_context", "NetClient.Elastic" }
+            });
         }
 
         /// <summary>
@@ -33,7 +44,7 @@ namespace NetClient.Elastic
         /// <param name="app">The application builder.</param>
         public void Configure(IApplicationBuilder app)
         {
-            //app.UseAllElasticApm(Configuration);
+            //app.UseAllElasticApm(Configuration);            
             app.UseRouting();
             app.UseSerilogRequestLogging();
 
@@ -48,6 +59,7 @@ namespace NetClient.Elastic
                 {
                     Predicate = r => r.Name.Contains("self")
                 });
+                endpoints.MapMetrics();
             });
         }
     }

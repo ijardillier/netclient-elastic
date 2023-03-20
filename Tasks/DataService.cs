@@ -1,48 +1,28 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Prometheus;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace NetClient.Elastic.Tasks
 {
     public class DataService : BackgroundService
     {
         private readonly ILogger<DataService> _logger;
         private readonly Settings _settings;
-
-        private readonly MetricServer _metricServer = new MetricServer(port: 9091);
         private readonly Random _random = new Random();
 
         private static readonly GaugeConfiguration configuration = new GaugeConfiguration { LabelNames = new[] { "service" }};
-        private static readonly Gauge Gauge1 = Metrics.CreateGauge("myapp_gauge1", "A simple gauge 1", configuration);
-        private static readonly Gauge Gauge2 = Metrics.CreateGauge("myapp_gauge2", "A simple gauge 2", configuration);
-        private static readonly Gauge Gauge3 = Metrics.CreateGauge("myapp_gauge3", "A simple gauge 3", configuration);
-        private static readonly Gauge Gauge4 = Metrics.CreateGauge("myapp_gauge4", "A simple gauge 4", configuration);
-        private static readonly Gauge Gauge5 = Metrics.CreateGauge("myapp_gauge5", "A simple gauge 5", configuration);
-        private static readonly Gauge Gauge6 = Metrics.CreateGauge("myapp_gauge6", "A simple gauge 6", configuration);
-        private static readonly Gauge Gauge7 = Metrics.CreateGauge("myapp_gauge7", "A simple gauge 7", configuration);
-        private static readonly Gauge Gauge8 = Metrics.CreateGauge("myapp_gauge8", "A simple gauge 8", configuration);
-        private static readonly Gauge Gauge9 = Metrics.CreateGauge("myapp_gauge9", "A simple gauge 9", configuration);
+        private readonly Gauge Gauge1 = Metrics.CreateGauge("myapp_gauge1", "A simple gauge 1", configuration);
+        private readonly Gauge Gauge2 = Metrics.CreateGauge("myapp_gauge2", "A simple gauge 2", configuration);
+        private readonly Gauge Gauge3 = Metrics.CreateGauge("myapp_gauge3", "A simple gauge 3", configuration);
+        private readonly Gauge Gauge4 = Metrics.CreateGauge("myapp_gauge4", "A simple gauge 4", configuration);
+        private readonly Gauge Gauge5 = Metrics.CreateGauge("myapp_gauge5", "A simple gauge 5", configuration);
+        private readonly Gauge Gauge6 = Metrics.CreateGauge("myapp_gauge6", "A simple gauge 6", configuration);
+        private readonly Gauge Gauge7 = Metrics.CreateGauge("myapp_gauge7", "A simple gauge 7", configuration);
+        private readonly Gauge Gauge8 = Metrics.CreateGauge("myapp_gauge8", "A simple gauge 8", configuration);
+        private readonly Gauge Gauge9 = Metrics.CreateGauge("myapp_gauge9", "A simple gauge 9", configuration);
   
         public DataService(IOptions<Settings> settings, ILogger<DataService> logger)
         {
             _settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        public override async Task StartAsync(CancellationToken cancellationToken)
-        {
-            await base.StartAsync(cancellationToken);
-            _metricServer.Start();
-        }
-
-        public override async Task StopAsync(CancellationToken cancellationToken)
-        {
-            await _metricServer.StopAsync();
-            await base.StopAsync(cancellationToken);
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
