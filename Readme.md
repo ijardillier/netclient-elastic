@@ -426,6 +426,22 @@ We also have to map endpoints for metrics.
 This map exposes the /metrics endpoint with the Prometheus format.
 If you need OpenMetrics format, you can easily access it with /metrics?accept=application/openmetrics-text
 
+The result is the below:
+
+    # HELP aspnetcore_healthcheck_status ASP.NET Core health check status (0 == Unhealthy, 0.5 == Degraded, 1 == Healthy)
+    # TYPE aspnetcore_healthcheck_status gauge
+    aspnetcore_healthcheck_status{name="self",domain="NetClient",domain_context="NetClient.Elastic"} 1
+    # HELP myapp_gauge1 A simple gauge 1
+    # TYPE myapp_gauge1 gauge
+    myapp_gauge1{service="service1",domain="NetClient",domain_context="NetClient.Elastic"} 1028
+    # HELP myapp_gauge2 A simple gauge 2
+    # TYPE myapp_gauge2 gauge
+    myapp_gauge2{service="service1",domain="NetClient",domain_context="NetClient.Elastic"} 2403
+    # HELP myapp_gauge3 A simple gauge 3
+    # TYPE myapp_gauge3 gauge
+    myapp_gauge3{service="service1",domain="NetClient",domain_context="NetClient.Elastic"} 3872
+    ...
+
 ### Forward HealthChecks to Prometheus
 
 We can easily forwar our health checks to Prometheus, to avoir using http module from metricbeat and retrieve all metrics including health checks from Prometheus module.
