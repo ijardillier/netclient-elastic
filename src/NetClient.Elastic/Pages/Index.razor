@@ -1,0 +1,79 @@
+﻿@page "/"
+@using NetClient.Elastic.Models
+@using NetClient.Elastic.Services
+@inject IPersonApiService personsService;
+
+<PageTitle>Persons</PageTitle>
+
+<h1>Persons!</h1>
+
+Welcome to your new app.
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Location</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in persons)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.FullName</td>
+                <td>@item.Email</td>
+                <td>@(item.City+", "+item.Country)</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="@(e => AddPerson(item))">Add </button>
+                    <button class="btn btn-warning" @onclick="@(e => UpdatePerson(item))">Update </button>
+                    <button class="btn btn-danger" @onclick="@(e => DeletePerson(item))">Delete </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+@code {
+    List<Person> persons = new List<Person>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        persons = await personsService.GetPersons();
+        if (persons == null)
+        {
+            persons = new List<Person>();
+        }
+    }
+
+
+    private async Task AddPerson(Person person)
+    {
+        await personsService.AddPerson(
+                new Person
+                    {
+                        Id = persons.Count + 1,
+                        FullName = person.FullName,
+                        City = "Tokyo",
+                        Country = "Japan",
+                        Email = person.Email
+                    }
+            );
+
+        persons = await personsService.GetPersons();
+    }
+
+    private async Task UpdatePerson(Person person)
+    {
+        person.FullName = "Batista";
+        await personsService.UpdatePerson(person.Id, person);
+        persons = await personsService.GetPersons();
+    }
+
+    private async Task DeletePerson(Person guest)
+    {
+        await personsService.RemovePerson(guest.Id);
+        persons = await personsService.GetPersons();
+    }
+}

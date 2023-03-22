@@ -37,7 +37,7 @@ namespace NetClient.Elastic.Tasks
 
                 SendData();
 
-                await Task.Delay(_settings.CheckConfigurationUpdateDelay, cancellationToken);
+                await Task.Delay(_settings.DataServiceExecutionDelay, cancellationToken);
             }
 
             _logger.LogDebug("{Source} background task is stopping.", nameof(DataService));

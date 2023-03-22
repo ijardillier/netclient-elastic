@@ -21,8 +21,10 @@ namespace NetApi.Elastic
             // Adds all custom configurations for this service.
             services
                 .AddOptions()
-                .AddCustomHealthCheck(Configuration)
-                .AddApiVersioning()
+                .AddCustomHealthCheck(Configuration);
+
+
+            services.AddApiVersioning()
                 .AddEndpointsApiExplorer()
                 .AddSwaggerGen()
                 .AddCors(policy =>
@@ -31,8 +33,9 @@ namespace NetApi.Elastic
                         .AllowAnyOrigin()
                         .AllowAnyHeader()
                         .AllowAnyMethod());
-                })
-                .AddControllers();   
+                });
+
+            services.AddControllers();   
 
             // Suppress default metrics
             Metrics.SuppressDefaultMetrics();

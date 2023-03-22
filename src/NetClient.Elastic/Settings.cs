@@ -2,6 +2,8 @@
 {
     public class Settings
     {
-        public int CheckConfigurationUpdateDelay { get; set; }
+        public int DataServiceExecutionDelay { get; set; }
+
+        public string PersonApiBaseAddress { get; set; }
     }
 }

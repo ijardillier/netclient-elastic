@@ -1,5 +1,4 @@
 ﻿using Autofac.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Hosting;
 using NetClient.Elastic.Extensions;
 using Serilog;
 
@@ -7,9 +6,9 @@ namespace NetClient.Elastic
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            BuildHost(args).Run();
+            await BuildHost(args).RunAsync();
         }
 
         public static IHost BuildHost(string[] args) =>

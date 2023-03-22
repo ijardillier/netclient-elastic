@@ -442,7 +442,7 @@ This is done here in our custom extension which is used in the ConfigureServices
 
 ### Business metrics
 
-You have a full sample of hox to create business metrics in the DataService class. In this sample, metrics are generated in a background service, so they have ramdom values and are attached to a label named service. The delay of this background task is configurable in the appsettings.json file (CheckConfigurationUpdateDelay).
+You have a full sample of hox to create business metrics in the DataService class. In this sample, metrics are generated in a background service, so they have ramdom values and are attached to a label named service. The delay of this background task is configurable in the appsettings.json file (DataServiceExecutionDelay).
 
 To create a new metric, you just have to instantiate an new counter, gauge, ...:
 
