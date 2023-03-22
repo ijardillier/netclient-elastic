@@ -2,19 +2,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            // Use IntelliSense to find out which attributes exist for C# debugging
-            // Use hover for the description of the existing attributes
-            // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
-            "name": ".NET Launch (Development)",
+            "name": "API .NET Launch (Development)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
-            // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/bin/Debug/net6.0/NetClient.Elastic.dll",
+            "preLaunchTask": "build-api",
+            "program": "${workspaceFolder}/src/NetApi.Elastic/bin/Debug/net6.0/NetApi.Elastic.dll",
             "args": [],
-            "cwd": "${workspaceFolder}",
-            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
-            //"console": "internalConsole",
+            "cwd": "${workspaceFolder}/src/NetApi.Elastic/",
+            "console" : "externalTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://+:8090;https://+:8091",
+            }
+        },
+        {
+            "name": "Client .NET Launch (Development)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-client",
+            "program": "${workspaceFolder}/src/NetClient.Elastic/bin/Debug/net6.0/NetClient.Elastic.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/NetClient.Elastic/",
             "console" : "externalTerminal",
             "stopAtEntry": false,
             "env": {
@@ -23,19 +32,13 @@
             }
         },
         {
-            // Use IntelliSense to find out which attributes exist for C# debugging
-            // Use hover for the description of the existing attributes
-            // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
-            "name": ".NET Launch (Production)",
+            "name": "API .NET Launch (Production)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/bin/Debug/net6.0/NetClient.Elastic.dll",
+            "program": "${workspaceFolder}/src/NetApi.Elastic/bin/Debug/net6.0/NetApi.Elastic.dll",
             "args": [],
-            "cwd": "${workspaceFolder}",
-            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
-            //"console": "internalConsole",
+            "cwd": "${workspaceFolder}/src/NetApi.Elastic/",
             "console" : "externalTerminal",
             "stopAtEntry": false,
             "env": {
@@ -44,9 +47,19 @@
             }
         },
         {
-            "name": ".NET Core Attach",
+            "name": "Client .NET Launch (Production)",
             "type": "coreclr",
-            "request": "attach"
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/NetClient.Elastic/bin/Debug/net6.0/NetClient.Elastic.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/NetClient.Elastic/",
+            "console" : "externalTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Production",
+                "ASPNETCORE_URLS": "http://+:8080;https://+:8081",
+            }
         },
         {
             "name": "Docker .NET Launch (Development)",
@@ -54,17 +67,23 @@
             "request": "launch",
             "preLaunchTask": "docker-run: debug",
             "netCore": {
-                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj"
+                "appProject": "${workspaceFolder}/src/NetClient.Elastic/NetClient.Elastic.csproj"
             }
-        }        ,
+        },
         {
             "name": "Docker .NET Launch (Production)",
             "type": "docker",
             "request": "launch",
             "preLaunchTask": "docker-run: release",
             "netCore": {
-                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj"
+                "appProject": "${workspaceFolder}/src/NetClient.Elastic/NetClient.Elastic.csproj"
             }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Api/Client",
+            "configurations": ["API .NET Launch (Development)", "Client .NET Launch (Development)"]
         }
     ]
 }

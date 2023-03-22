@@ -27,6 +27,9 @@
     - [Prometheus metrics configuration](#prometheus-metrics-configuration)
     - [Prometheus endpoints maps](#prometheus-endpoints-maps)
     - [Business metrics](#business-metrics)
+- [Traces (via Elastic APM agent)](#traces-via-elastic-apm-agent)
+  - [Supported technologies](#supported-technologies)
+  - [Profiler auto instrumentation](#profiler-auto-instrumentation)
 
 # Context
 
@@ -424,3 +427,72 @@ To apply a label and a value to a metric, use this kind of code:
 
     Gauge1.WithLabels("service1").Set(_random.Next(1000, 2000));
 
+# Traces (via Elastic APM agent)
+
+The Elastic APM .NET Agent automatically measures the performance of your application and tracks errors. It has built-in support for the most popular frameworks, as well as a simple API which allows you to instrument any application.
+
+The agent auto-instruments supported technologies and records interesting events, like HTTP requests and database queries. To do this, it uses built-in capabilities of the instrumented frameworks like Diagnostic Source, an HTTP module for IIS, or IDbCommandInterceptor for Entity Framework. This means that for the supported technologies, there are no code changes required beyond enabling auto-instrumentation.
+
+Source : [APM .Net Agent](https://www.elastic.co/guide/en/apm/agent/dotnet/current/intro.html)
+
+## Supported technologies
+
+Choosing between Profiler auto instrumentation and NuGet use will depend on your needs and supported technologies.
+
+See these pages for more information: 
+
+- [Supported technoligies](https://www.elastic.co/guide/en/apm/agent/dotnet/current/supported-technologies.html)
+- [Profiler Auto instrumentation](https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-auto-instrumentation.html)
+
+## Profiler auto instrumentation
+
+In our case, as we use Docker, it would be easy to add Profiler auto instrumentation, we just have to add these lines in our Dockerfile :
+
+    ARG AGENT_VERSION=1.20.0
+
+    FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine3.16 AS base
+    
+    # ...
+
+    FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine3.16 AS build
+    ARG AGENT_VERSION
+
+    # install zip curl
+    RUN apk update && apk add zip wget
+
+    # pull down the zip file based on ${AGENT_VERSION} ARG and unzip
+    RUN wget -q https://github.com/elastic/apm-agent-dotnet/releases/download/v${AGENT_VERSION}/elastic_apm_profiler_${AGENT_VERSION}-linux-x64.zip && \
+        unzip elastic_apm_profiler_${AGENT_VERSION}-linux-x64.zip -d /elastic_apm_profiler
+
+    RUN wget -q https://github.com/elastic/apm-agent-dotnet/releases/download/v${AGENT_VERSION}/ElasticApmAgent_${AGENT_VERSION}.zip && \
+        unzip ElasticApmAgent_${AGENT_VERSION}.zip -d /ElasticApmAgent
+
+    # ...
+
+    FROM build AS publish
+
+    # ...
+
+    FROM base AS final
+
+    WORKDIR /elastic_apm_profiler
+    COPY --from=publish /elastic_apm_profiler .
+    WORKDIR /ElasticApmAgent
+    COPY --from=publish /ElasticApmAgent .
+
+    # ...
+
+    ENV CORECLR_ENABLE_PROFILING=1
+    ENV CORECLR_PROFILER={FA65FE15-F085-4681-9B20-95E04F6C03CC}
+    ENV CORECLR_PROFILER_PATH=/elastic_apm_profiler/libelastic_apm_profiler.so
+    ENV ELASTIC_APM_PROFILER_HOME=/elastic_apm_profiler
+    ENV ELASTIC_APM_PROFILER_INTEGRATIONS=/elastic_apm_profiler/integrations.yml
+    ENV DOTNET_STARTUP_HOOKS=/ElasticApmAgent/ElasticApmAgentStartupHook.dll
+    ENV ELASTIC_APM_SERVER_URL=https://host.docker.internal:8200
+    ENV ELASTIC_APM_VERIFY_SERVER_CERT=false
+    ENV ELASTIC_APM_SERVICE_NAME=NetClient-Elastic
+    ENV ELASTIC_APM_LOG_LEVEL=Information
+    ENV ELASTIC_APM_ENVIRONMENT=Development
+    ENV ELASTIC_APM_STARTUP_HOOKS_LOGGING=1
+
+    # ...

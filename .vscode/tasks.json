@@ -4,40 +4,66 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "clean-api",
             "command": "dotnet",
             "type": "process",
+            "args": [
+                "clean",
+                "${workspaceFolder}/src/NetApi.Elastic/NetApi.Elastic.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "clean-client",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "clean",
+                "${workspaceFolder}/src/NetClient.Elastic/NetClient.Elastic.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-api",
+            "command": "dotnet",
+            "type": "process",
+            "dependsOn": [
+                "clean-api"
+            ],
             "args": [
                 "build",
-                "${workspaceFolder}/NetClient.Elastic.csproj",
+                "${workspaceFolder}/src/NetApi.Elastic/NetApi.Elastic.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
-            "label": "publish",
+            "label": "build-client",
             "command": "dotnet",
             "type": "process",
+            "dependsOn": [
+                "clean-client"
+            ],
             "args": [
-                "publish",
-                "${workspaceFolder}/NetClient.Elastic.csproj",
+                "build",
+                "${workspaceFolder}/src/NetClient.Elastic/NetClient.Elastic.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/NetClient.Elastic.csproj"
-            ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "type": "docker-build",
@@ -48,28 +74,25 @@
             "dockerBuild": {
                 "tag": "netclient-elastic:dev",
                 "target": "base",
-                "dockerfile": "${workspaceFolder}/Dockerfile",
-                "context": "${workspaceFolder}",
+                "dockerfile": "${workspaceFolder}/src/NetClient.Elastic/Dockerfile",
+                "context": "${workspaceFolder}/src/NetClient.Elastic",
                 "pull": true
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj"
+                "appProject": "${workspaceFolder}/src/NetClient.ElasticNet/Client.Elastic.csproj"
             }
         },
         {
             "type": "docker-build",
             "label": "docker-build: release",
-            "dependsOn": [
-                "build"
-            ],
             "dockerBuild": {
                 "tag": "netclient-elastic:latest",
-                "dockerfile": "${workspaceFolder}/Dockerfile",
-                "context": "${workspaceFolder}",
+                "dockerfile": "${workspaceFolder}/src/NetClient.Elastic/Dockerfile",
+                "context": "${workspaceFolder}/src/NetClient.Elastic",
                 "pull": true
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj"
+                "appProject": "${workspaceFolder}/src/NetClient.Elastic/NetClient.Elastic.csproj"
             }
         },
         {
@@ -81,16 +104,25 @@
             "dockerRun": {
                 "containerName": "netclient-elastic",
                 "ports": [
-                    { "hostPort": 8080, "containerPort": 80 }
+                    {
+                        "hostPort": 8080,
+                        "containerPort": 80
+                    }
                 ],
                 "env": {
-                    "ASPNETCORE_ENVIRONMENT":"Development"
-                }
+                    "ASPNETCORE_ENVIRONMENT": "Development"
+                },
+                "extraHosts": [
+                    {
+                        "hostname": "host.docker.internal",
+                        "ip": "host-gateway"
+                    }
+                ]
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj",
+                "appProject": "${workspaceFolder}/src/NetClient.Elastic/NetClient.Elastic.csproj",
                 "enableDebugging": true
-            },
+            }
         },
         {
             "type": "docker-run",
@@ -101,7 +133,10 @@
             "dockerRun": {
                 "containerName": "netclient-elastic",
                 "ports": [
-                    { "hostPort": 8080, "containerPort": 80 }
+                    {
+                        "hostPort": 8080,
+                        "containerPort": 80
+                    }
                 ],
                 "volumes": [
                     {
@@ -111,7 +146,7 @@
                     }
                 ],
                 "env": {
-                    "ASPNETCORE_ENVIRONMENT":"Production",
+                    "ASPNETCORE_ENVIRONMENT": "Production"
                 },
                 "extraHosts": [
                     {
@@ -121,7 +156,7 @@
                 ]
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/NetClient.Elastic.csproj",
+                "appProject": "${workspaceFolder}/src/NetClient.Elastic/NetClient.Elastic.csproj",
                 "enableDebugging": false
             }
         }

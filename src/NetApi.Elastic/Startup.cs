@@ -1,13 +1,11 @@
-﻿// using Elastic.Apm.NetCoreAll;
+﻿using Elastic.Apm.NetCoreAll;
 using HealthChecks.UI.Client;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using NetClient.Elastic.Extensions;
-using NetClient.Elastic.Tasks;
+using NetApi.Elastic.Extensions;
 using Prometheus;
 using Serilog;
 
-namespace NetClient.Elastic
+namespace NetApi.Elastic
 {
     public class Startup
     {
@@ -22,10 +20,19 @@ namespace NetClient.Elastic
         {
             // Adds all custom configurations for this service.
             services
-                .Configure<Settings>(Configuration)
                 .AddOptions()
                 .AddCustomHealthCheck(Configuration)
-                .AddHostedService<DataService>();        
+                .AddApiVersioning()
+                .AddEndpointsApiExplorer()
+                .AddSwaggerGen()
+                .AddCors(policy =>
+                {
+                    policy.AddPolicy("OpenCorsPolicy", opt => opt
+                        .AllowAnyOrigin()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
+                })
+                .AddControllers();   
 
             // Suppress default metrics
             Metrics.SuppressDefaultMetrics();
@@ -33,8 +40,8 @@ namespace NetClient.Elastic
             // Defines statics labels for metrics
             Metrics.DefaultRegistry.SetStaticLabels(new Dictionary<string, string>
             {
-                { "domain", "NetClient" },
-                { "domain_context", "NetClient.Elastic" }
+                { "domain", "NetApi" },
+                { "domain_context", "NetApi.Elastic" }
             });
         }
 
@@ -44,9 +51,10 @@ namespace NetClient.Elastic
         /// <param name="app">The application builder.</param>
         public void Configure(IApplicationBuilder app)
         {
-            //app.UseAllElasticApm(Configuration);            
+            app.UseAllElasticApm(Configuration);            
             app.UseRouting();
             app.UseSerilogRequestLogging();
+            app.UseCors("OpenCorsPolicy");
 
             app.UseEndpoints(endpoints =>
             {
@@ -55,12 +63,23 @@ namespace NetClient.Elastic
                     Predicate = _ => true,
                     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
                 });
+                
                 endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
                 {
                     Predicate = r => r.Name.Contains("self")
                 });
+
                 endpoints.MapMetrics();
-            });
+
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}"
+                );
+            });                     
         }
     }
 }
+
+
+
+
