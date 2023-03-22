@@ -585,7 +585,7 @@ To add the transaction id and trace id to every Serilog log message that is crea
         }
     }
 
-To define the APM server to cmmunicate with, add the following configuration: 
+To define the APM server to communicate with, add the following configuration: 
 
     {
         "AllowedHosts": "*",
