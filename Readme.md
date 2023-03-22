@@ -556,7 +556,7 @@ You can find all the documentation at this place: [Profiler Auto instrumentation
 
 ### NuGet packages
 
-But as this is not a legacy application and we want to be able to automatically add SpanId and TransactionId to our logs and eventually use NuGet features, we will prefe the NuGet use.
+But as this is not a legacy application and we want to be able to automatically add TraceId and TransactionId to our logs and eventually use NuGet features, we will prefer the NuGet use.
 
 The following Elastic for .Net NuGet packages are used:
 
