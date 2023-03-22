@@ -33,8 +33,8 @@
   - [Implementation](#implementation-3)
     - [Profiler auto instrumentation](#profiler-auto-instrumentation)
     - [NuGet packages](#nuget-packages-6)
+    - [Elastic APM integration](#elastic-apm-integration)
     - [Elastic APM configuration](#elastic-apm-configuration)
-  - [Elastic APM configuration](#elastic-apm-configuration-1)
 
 # Context
 
@@ -563,7 +563,7 @@ The following Elastic for .Net NuGet packages are used:
 - [Elastic.Apm.NetCoreAll](https://github.com/elastic/apm-agent-dotnet)
 - [Elastic.Apm.SerilogEnricher](https://github.com/elastic/ecs-dotnet/tree/main/src/Elastic.Apm.SerilogEnricher)
 
-### Elastic APM configuration
+### Elastic APM integration
 
 To enable Elastic APM, you just have one line to add in you Configure method:
 
@@ -572,7 +572,7 @@ To enable Elastic APM, you just have one line to add in you Configure method:
         app.UseAllElasticApm(Configuration);            
     }
 
-## Elastic APM configuration
+### Elastic APM configuration
 
 To add the transaction id and trace id to every Serilog log message that is created during a transaction, you just add to update your configuration in the appsettings.json file:
 
