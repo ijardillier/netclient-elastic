@@ -12,10 +12,10 @@ namespace NetApi.Elastic.Controllers
 
         private static List<Person> persons = new List<Person>()
         {
-            new Person{Id=1, FullName="Usman",Email="usman@gmail.com",City="Mirpur", Country="Pakistan"},
-            new Person{Id=2, FullName="Jolly",Email="jolly@gmail.com",City="Rome", Country="Italy"},
-            new Person{Id=3, FullName="Tina",Email="tina@gmail.com",City="Berlin", Country="Germany"},
-            new Person{Id=4, FullName="Anil",Email="anil@gmail.com",City="Mumbai", Country="India"},
+            new Person{ Id=1, FullName="Usman", Email="usman@gmail.com", City="Mirpur", Country="Pakistan"},
+            new Person{ Id=2, FullName="Jolly", Email="jolly@gmail.com", City="Rome", Country="Italy"},
+            new Person{ Id=3, FullName="Tina", Email="tina@gmail.com", City="Berlin", Country="Germany"},
+            new Person{ Id=4, FullName="Anil", Email="anil@gmail.com", City="Mumbai", Country="India"},
         };
 
         private readonly ILogger<PersonsController> _logger;
