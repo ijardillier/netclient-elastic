@@ -68,7 +68,7 @@ Following Serilog NuGet packages are used to immplement logging:
 
 - [Serilog.AspNetCore](https://github.com/serilog/serilog-aspnetcore): 
   
-    Serilog logging for ASP.NET Core: this package routes ASP.NET Core log messages through Serilog, so you can get information about ASP.NET's internal operations written to the same Serilog sinks as your application events. With Serilog.AspNetCore installed and configured, you can write log messages directly through Serilog or any ILogger interface injected by ASP.NET. All loggers will use the same underlying implementation, levels, and destinations.
+    Serilog logging for ASP.NET Core: this package routes ASP.NET Core log messages through Serilog.
 
 - [Serilog.Enrichers.Environment](https://github.com/serilog/serilog-enrichers-environment): 
   
@@ -80,7 +80,7 @@ Following Serilog NuGet packages are used to immplement logging:
 
 - [Serilog.Sinks.Console](https://github.com/serilog/serilog-sinks-console):
 
-    A Serilog sink that writes log events to the Windows Console or an ANSI terminal via standard output. Coloring and custom themes are supported, including ANSI 256-color themes on macOS, Linux and Windows 10. The default output is plain text; JSON formatting can be plugged in using a package such as Serilog.Formatting.Compact. But for our needs, we will use the formatting provided by Elastic.
+    A Serilog sink that writes log events to the Windows Console or an ANSI terminal via standard output.
 
 ### Elastic NuGet packages
 
