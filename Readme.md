@@ -30,7 +30,11 @@
     - [Business metrics](#business-metrics)
 - [Traces (via Elastic APM agent)](#traces-via-elastic-apm-agent)
   - [Supported technologies](#supported-technologies)
-  - [Profiler auto instrumentation](#profiler-auto-instrumentation)
+  - [Implementation](#implementation-3)
+    - [Profiler auto instrumentation](#profiler-auto-instrumentation)
+    - [NuGet packages](#nuget-packages-6)
+    - [Elastic APM configuration](#elastic-apm-configuration)
+  - [Elastic APM configuration](#elastic-apm-configuration-1)
 
 # Context
 
@@ -42,6 +46,11 @@ The purpose of this application is to show how to integrate:
 - traces (via Elastic APM)
   
 to an Elasticsearch cluster with .Net.
+
+There are two projects :
+
+- NetApi.Elastic : a Web API that exposes mainly an endpoint /persons and also a swagger endpoint in Development mode
+- NetClient.Elastic : a Web client with some razor pages on / and a persons view which interact with NetApi.Elastic
 
 # Logs (via Serilog)
 
@@ -337,12 +346,13 @@ For more information about this metricbeat configuration, you can have a look to
 
 You can either use heartbeat agent and the /liveness endpoint in order to use the Uptime app in Kibana.
 
-- type: http
-  id: http-monitor
-  name: HTTP Monitor
-  schedule: '@every 5s' # every 5 seconds from start of beat
-  urls: 
-  - "http://host.docker.internal:8080/liveness"
+    heartbeat.monitors:
+    - type: http
+    id: http-monitor
+    name: HTTP Monitor
+    schedule: '@every 5s' # every 5 seconds from start of beat
+    urls: 
+    - "http://host.docker.internal:8080/liveness"
 
 For more information about this heartbeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/heartbeat/config/monitors.d/http.yml
 
@@ -364,7 +374,7 @@ The following Prometheus for .Net NuGet package is used:
 - [prometheus-net.AspNetCore](https://github.com/prometheus-net/prometheus-net#aspnet-core-exporter-middleware)
 - [prometheus-net.AspNetCore.HealthChecks](https://github.com/prometheus-net/prometheus-net#aspnet-core-health-check-status-metrics)
 
-    These are .NET libraries for instrumenting your applications and exporting metrics to Prometheus.
+These are .NET libraries for instrumenting your applications and exporting metrics to Prometheus.
 
 ## Implementation
 
@@ -469,12 +479,11 @@ Source : [APM .Net Agent](https://www.elastic.co/guide/en/apm/agent/dotnet/curre
 
 Choosing between Profiler auto instrumentation and NuGet use will depend on your needs and supported technologies.
 
-See these pages for more information: 
+See these pages for more information: [Supported technologies](https://www.elastic.co/guide/en/apm/agent/dotnet/current/supported-technologies.html)
 
-- [Supported technoligies](https://www.elastic.co/guide/en/apm/agent/dotnet/current/supported-technologies.html)
-- [Profiler Auto instrumentation](https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-auto-instrumentation.html)
+## Implementation
 
-## Profiler auto instrumentation
+### Profiler auto instrumentation
 
 In our case, as we use Docker, it would be easy to add Profiler auto instrumentation, we just have to add these lines in our Dockerfile :
 
@@ -526,3 +535,48 @@ In our case, as we use Docker, it would be easy to add Profiler auto instrumenta
     ENV ELASTIC_APM_STARTUP_HOOKS_LOGGING=1
 
     # ...
+
+You can find all the documentation at this place: [Profiler Auto instrumentation](https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-auto-instrumentation.html)
+
+### NuGet packages
+
+But as this is not a legacy application and we want to be able to automatically add SpanId and TransactionId to our logs and eventually use NuGet features, we will prefe the NuGet use.
+
+The following Elastic for .Net NuGet packages are used:
+
+- [Elastic.Apm.NetCoreAll](https://github.com/elastic/apm-agent-dotnet)
+- [Elastic.Apm.SerilogEnricher](https://github.com/elastic/ecs-dotnet/tree/main/src/Elastic.Apm.SerilogEnricher)
+
+### Elastic APM configuration
+
+To enable Elastic APM, you just have one line to add in you Configure method:
+
+    public void Configure(IApplicationBuilder app)
+    {
+        app.UseAllElasticApm(Configuration);            
+    }
+
+## Elastic APM configuration
+
+To add the transaction id and trace id to every Serilog log message that is created during a transaction, you just add to update your configuration in the appsettings.json file:
+
+    {
+        "Serilog": {
+            "Using": ["Elastic.Apm.SerilogEnricher"],
+            /* ... */
+            "Enrich": [/* ... */, "WithElasticApmCorrelationInfo"],
+            /* ... */
+        }
+    }
+
+To define the APM server to cmmunicate with, add the following configuration: 
+
+    {
+        "AllowedHosts": "*",
+        "ElasticApm": 
+        {
+            "ServerUrl":  "https://host.docker.internal:8200",
+            "LogLevel":  "Information",
+            "VerifyServerCert": false
+        }
+    }
