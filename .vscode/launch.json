@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "API .NET Launch (Development)",
+            "name": "Launch API (Development)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-api",
@@ -17,7 +17,7 @@
             }
         },
         {
-            "name": "Client .NET Launch (Development)",
+            "name": "Launch Client (Development)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-client",
@@ -32,10 +32,10 @@
             }
         },
         {
-            "name": "API .NET Launch (Production)",
+            "name": "Launch API (Production)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build-api",
             "program": "${workspaceFolder}/src/NetApi.Elastic/bin/Debug/net6.0/NetApi.Elastic.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/NetApi.Elastic/",
@@ -43,14 +43,14 @@
             "stopAtEntry": false,
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Production",
-                "ASPNETCORE_URLS": "http://+:8080;https://+:8081",
+                "ASPNETCORE_URLS": "http://+:8090;https://+:8091",
             }
         },
         {
-            "name": "Client .NET Launch (Production)",
+            "name": "Launch Client (Production)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build-client",
             "program": "${workspaceFolder}/src/NetClient.Elastic/bin/Debug/net6.0/NetClient.Elastic.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/NetClient.Elastic/",
@@ -62,19 +62,37 @@
             }
         },
         {
-            "name": "Docker .NET Launch (Development)",
+            "name": "Docker API (Development)",
             "type": "docker",
             "request": "launch",
-            "preLaunchTask": "docker-run: debug",
+            "preLaunchTask": "docker-run-api: debug",
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/NetApi.Elastic/NetApi.Elastic.csproj"
+            }
+        },
+        {
+            "name": "Docker Client (Development)",
+            "type": "docker",
+            "request": "launch",
+            "preLaunchTask": "docker-run-client: debug",
             "netCore": {
                 "appProject": "${workspaceFolder}/src/NetClient.Elastic/NetClient.Elastic.csproj"
             }
         },
         {
-            "name": "Docker .NET Launch (Production)",
+            "name": "Docker API (Production)",
             "type": "docker",
             "request": "launch",
-            "preLaunchTask": "docker-run: release",
+            "preLaunchTask": "docker-run-api: release",
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/NetApi.Elastic/NetApi.Elastic.csproj"
+            }
+        },
+        {
+            "name": "Docker Client (Production)",
+            "type": "docker",
+            "request": "launch",
+            "preLaunchTask": "docker-run-client: release",
             "netCore": {
                 "appProject": "${workspaceFolder}/src/NetClient.Elastic/NetClient.Elastic.csproj"
             }
@@ -82,8 +100,20 @@
     ],
     "compounds": [
         {
-            "name": "Api/Client",
-            "configurations": ["API .NET Launch (Development)", "Client .NET Launch (Development)"]
+            "name": "Launch Api/Client (Development)",
+            "configurations": ["Launch API (Development)", "Launch Client (Development)"]
+        },
+        {
+            "name": "Launch Api/Client (Production)",
+            "configurations": ["Launch API (Production)", "Launch Client (Production)"]
+        },
+        {
+            "name": "Docker Api/Client (Development)",
+            "configurations": ["Docker API (Development)", "Docker Client (Development)"]
+        },
+        {
+            "name": "Docker Api/Client (Production)",
+            "configurations": ["Docker API (Production)", "Docker Client (Production)"]
         }
     ]
 }

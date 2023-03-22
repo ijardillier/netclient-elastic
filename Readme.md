@@ -346,7 +346,7 @@ You can either use heartbeat agent and the /liveness endpoint in order to use th
 
 For more information about this heartbeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/heartbeat/config/monitors.d/http.yml
 
-In the Prmetheus section, we will have another way to send healt checks to Elasticsearch. 
+In the Prometheus section, we will have another way to send healt checks to Elasticsearch. 
 
 # Metrics (via Prometheus)
 

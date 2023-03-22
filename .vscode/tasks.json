@@ -67,9 +67,26 @@
         },
         {
             "type": "docker-build",
-            "label": "docker-build: debug",
+            "label": "docker-build-api: debug",
             "dependsOn": [
-                "build"
+                "build-api"
+            ],
+            "dockerBuild": {
+                "tag": "netapi-elastic:dev",
+                "target": "base",
+                "dockerfile": "${workspaceFolder}/src/NetApi.Elastic/Dockerfile",
+                "context": "${workspaceFolder}/src/NetApi.Elastic",
+                "pull": true
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/NetApi.Elastic/NetApi.Elastic.csproj"
+            }
+        },
+        {
+            "type": "docker-build",
+            "label": "docker-build-client: debug",
+            "dependsOn": [
+                "build-client"
             ],
             "dockerBuild": {
                 "tag": "netclient-elastic:dev",
@@ -79,12 +96,25 @@
                 "pull": true
             },
             "netCore": {
-                "appProject": "${workspaceFolder}/src/NetClient.ElasticNet/Client.Elastic.csproj"
+                "appProject": "${workspaceFolder}/src/NetClient.Elastic/NetClient.Elastic.csproj"
             }
         },
         {
             "type": "docker-build",
-            "label": "docker-build: release",
+            "label": "docker-build-api: release",
+            "dockerBuild": {
+                "tag": "netapi-elastic:latest",
+                "dockerfile": "${workspaceFolder}/src/NetApi.Elastic/Dockerfile",
+                "context": "${workspaceFolder}/src/NetApi.Elastic",
+                "pull": true
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/NetApi.Elastic/NetApi.Elastic.csproj"
+            }
+        },
+        {
+            "type": "docker-build",
+            "label": "docker-build-client: release",
             "dockerBuild": {
                 "tag": "netclient-elastic:latest",
                 "dockerfile": "${workspaceFolder}/src/NetClient.Elastic/Dockerfile",
@@ -97,9 +127,38 @@
         },
         {
             "type": "docker-run",
-            "label": "docker-run: debug",
+            "label": "docker-run-api: debug",
             "dependsOn": [
-                "docker-build: debug"
+                "docker-build-api: debug"
+            ],
+            "dockerRun": {
+                "containerName": "netapi-elastic",
+                "ports": [
+                    {
+                        "hostPort": 8090,
+                        "containerPort": 80
+                    }
+                ],
+                "env": {
+                    "ASPNETCORE_ENVIRONMENT": "Development"
+                },
+                "extraHosts": [
+                    {
+                        "hostname": "host.docker.internal",
+                        "ip": "host-gateway"
+                    }
+                ]
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/NetApi.Elastic/NetApi.Elastic.csproj",
+                "enableDebugging": true
+            }
+        },
+        {
+            "type": "docker-run",
+            "label": "docker-run-client: debug",
+            "dependsOn": [
+                "docker-build-client: debug"
             ],
             "dockerRun": {
                 "containerName": "netclient-elastic",
@@ -126,9 +185,45 @@
         },
         {
             "type": "docker-run",
-            "label": "docker-run: release",
+            "label": "docker-run-api: release",
             "dependsOn": [
-                "docker-build: release"
+                "docker-build-api: release"
+            ],
+            "dockerRun": {
+                "containerName": "netapi-elastic",
+                "ports": [
+                    {
+                        "hostPort": 8090,
+                        "containerPort": 80
+                    }
+                ],
+                "volumes": [
+                    {
+                        "localPath": "${userHome}/.vsdbg",
+                        "containerPath": "/remote_debugger",
+                        "permissions": "ro"
+                    }
+                ],
+                "env": {
+                    "ASPNETCORE_ENVIRONMENT": "Production"
+                },
+                "extraHosts": [
+                    {
+                        "hostname": "host.docker.internal",
+                        "ip": "host-gateway"
+                    }
+                ]
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/src/NetApi.Elastic/NetApi.Elastic.csproj",
+                "enableDebugging": false
+            }
+        },
+        {
+            "type": "docker-run",
+            "label": "docker-run-client: release",
+            "dependsOn": [
+                "docker-build-client: release"
             ],
             "dockerRun": {
                 "containerName": "netclient-elastic",
