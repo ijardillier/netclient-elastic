@@ -218,7 +218,7 @@ In Development, generally, we won't want to display our logs in JSON format and 
 
 All the logs are written in the console, so they will be readable by using:
 
-    docker container logs netcore-client
+    docker container logs netclient-elastic
 
 To send the logs to Elasticseach, you will have to configure a filebeat agent with docker autodiscover for example.
 
