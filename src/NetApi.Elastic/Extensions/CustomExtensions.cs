@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Prometheus;
 using Serilog;
 
 namespace NetApi.Elastic.Extensions
@@ -10,6 +11,8 @@ namespace NetApi.Elastic.Extensions
             IHealthChecksBuilder hcBuilder = services.AddHealthChecks();
 
             hcBuilder.AddCheck("self", () => HealthCheckResult.Healthy());
+
+            hcBuilder.ForwardToPrometheus();
 
             return services;
         }

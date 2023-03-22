@@ -26,6 +26,7 @@
     - [NuGet packages](#nuget-packages-5)
     - [Prometheus metrics configuration](#prometheus-metrics-configuration)
     - [Prometheus endpoints maps](#prometheus-endpoints-maps)
+    - [Forward HealthChecks to Prometheus](#forward-healthchecks-to-prometheus)
     - [Business metrics](#business-metrics)
 - [Traces (via Elastic APM agent)](#traces-via-elastic-apm-agent)
   - [Supported technologies](#supported-technologies)
@@ -294,6 +295,7 @@ The second step is to map endpoints for health checks.
             {
                 Predicate = r => r.Name.Contains("self")
             });
+
             endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
             {
                 Predicate = _ => true,
@@ -344,6 +346,8 @@ You can either use heartbeat agent and the /liveness endpoint in order to use th
 
 For more information about this heartbeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/heartbeat/config/monitors.d/http.yml
 
+In the Prmetheus section, we will have another way to send healt checks to Elasticsearch. 
+
 # Metrics (via Prometheus)
 
 Prometheus collects and stores its metrics as time series data, i.e. metrics information is stored with the timestamp at which it was recorded, alongside optional key-value pairs called labels.
@@ -357,7 +361,8 @@ Source : [Prometheus](https://prometheus.io/)
 The following Prometheus for .Net NuGet package is used:
 
 - [prometheus-net](https://github.com/prometheus-net/prometheus-net)
-- [prometheus-net.AspNetCore](https://github.com/prometheus-net/prometheus-net)
+- [prometheus-net.AspNetCore](https://github.com/prometheus-net/prometheus-net#aspnet-core-exporter-middleware)
+- [prometheus-net.AspNetCore.HealthChecks](https://github.com/prometheus-net/prometheus-net#aspnet-core-health-check-status-metrics)
 
     These are .NET libraries for instrumenting your applications and exporting metrics to Prometheus.
 
@@ -369,6 +374,7 @@ You have to add the following packages in your csproj file.
 
     <PackageReference Include="prometheus-net" Version="8.0.0" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="8.0.0" />
 
 You can update the version to the latest available for your .Net version.
 
@@ -409,6 +415,30 @@ We also have to map endpoints for metrics.
 
 This map exposes the /metrics endpoint with the Prometheus format.
 If you need OpenMetrics format, you can easily access it with /metrics?accept=application/openmetrics-text
+
+### Forward HealthChecks to Prometheus
+
+We can easily forwar our health checks to Prometheus, to avoir using http module from metricbeat and retrieve all metrics including health checks from Prometheus module.
+By the way, we will also benefit from our labels if defined.
+
+This is done here in our custom extension which is used in the ConfigureServices of the Startup file.
+
+    public virtual void ConfigureServices(IServiceCollection services)
+    {
+        // ...
+        services.AddCustomHealthCheck(Configuration)
+        // ...     
+    }
+
+    public static IServiceCollection AddCustomHealthCheck(this IServiceCollection services, IConfiguration configuration)
+    {
+        IHealthChecksBuilder hcBuilder = services.AddHealthChecks();
+        hcBuilder.AddCheck("self", () => HealthCheckResult.Healthy());
+
+        hcBuilder.ForwardToPrometheus();
+
+        return services;
+    }
 
 ### Business metrics
 
