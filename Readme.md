@@ -1,38 +1,31 @@
 - [Context](#context)
 - [Logs (via Serilog)](#logs-via-serilog)
   - [NuGet packages](#nuget-packages)
-    - [Serilog NuGet packages](#serilog-nuget-packages)
-    - [Elastic NuGet packages](#elastic-nuget-packages)
-  - [Implementation](#implementation)
-    - [NuGet packages](#nuget-packages-1)
-    - [Serilog provider](#serilog-provider)
-    - [Serilog HTTP Request logging](#serilog-http-request-logging)
-    - [Serilog configuration](#serilog-configuration)
-      - [Production environment](#production-environment)
-      - [Development environment](#development-environment)
+  - [Serilog implementation](#serilog-implementation)
+  - [Serilog configuration](#serilog-configuration)
   - [Sending logs to Elasticsearch](#sending-logs-to-elasticsearch)
 - [Health checks (via Microsoft AspNetCore HealthChecks)](#health-checks-via-microsoft-aspnetcore-healthchecks)
-  - [NuGet packages](#nuget-packages-2)
+  - [NuGet packages](#nuget-packages-1)
     - [Xabaril NuGet packages](#xabaril-nuget-packages)
-  - [Implementation](#implementation-1)
-    - [NuGet packages](#nuget-packages-3)
+  - [Implementation](#implementation)
+    - [NuGet packages](#nuget-packages-2)
     - [HealthCheck service registration](#healthcheck-service-registration)
     - [HealthCheck endpoints maps](#healthcheck-endpoints-maps)
   - [Sending healthchecks to Elasticsearch](#sending-healthchecks-to-elasticsearch)
 - [Metrics (via Prometheus)](#metrics-via-prometheus)
-  - [NuGet packages](#nuget-packages-4)
+  - [NuGet packages](#nuget-packages-3)
     - [Prometheus for .Net NuGet packages](#prometheus-for-net-nuget-packages)
-  - [Implementation](#implementation-2)
-    - [NuGet packages](#nuget-packages-5)
+  - [Implementation](#implementation-1)
+    - [NuGet packages](#nuget-packages-4)
     - [Prometheus metrics configuration](#prometheus-metrics-configuration)
     - [Prometheus endpoints maps](#prometheus-endpoints-maps)
     - [Forward HealthChecks to Prometheus](#forward-healthchecks-to-prometheus)
     - [Business metrics](#business-metrics)
 - [Traces (via Elastic APM agent)](#traces-via-elastic-apm-agent)
   - [Supported technologies](#supported-technologies)
-  - [Implementation](#implementation-3)
+  - [Implementation](#implementation-2)
     - [Profiler auto instrumentation](#profiler-auto-instrumentation)
-    - [NuGet packages](#nuget-packages-6)
+    - [NuGet packages](#nuget-packages-5)
     - [Elastic APM integration](#elastic-apm-integration)
     - [Elastic APM configuration](#elastic-apm-configuration)
 
@@ -54,47 +47,29 @@ There are two projects :
 
 # Logs (via Serilog)
 
-Like many other libraries for .NET, Serilog provides diagnostic logging to files, the console, and elsewhere. It is easy to set up, has a clean API, and is portable between recent .NET platforms.
-
-Unlike other logging libraries, Serilog is built with powerful structured event data in mind.
+Like many other libraries for .NET, Serilog provides diagnostic logging to files, the console, and elsewhere. It is easy to set up, has a clean API, and is portable between recent .NET platforms. Unlike other logging libraries, Serilog is built with powerful structured event data in mind.
 
 Source : [Serilog.net](https://serilog.net/)
 
 ## NuGet packages
 
-### Serilog NuGet packages
-
 Following Serilog NuGet packages are used to immplement logging: 
 
-- [Serilog.AspNetCore](https://github.com/serilog/serilog-aspnetcore): 
-  
-    Serilog logging for ASP.NET Core: this package routes ASP.NET Core log messages through Serilog.
+- [Serilog.AspNetCore](https://github.com/serilog/serilog-aspnetcore): routes ASP.NET Core log messages through Serilog.
 
-- [Serilog.Enrichers.Environment](https://github.com/serilog/serilog-enrichers-environment): 
-  
-    Enriches Serilog events with information from the process environment.
+- [Serilog.Enrichers.Environment](https://github.com/serilog/serilog-enrichers-environment): enriches Serilog events with information from the process environment.
 
-- [Serilog.Settings.Configuration](https://github.com/serilog/serilog-settings-configuration):
+- [Serilog.Settings.Configuration](https://github.com/serilog/serilog-settings-configuration): reads configuration from Microsoft.Extensions.Configuration sources, including .NET Core's appsettings.json file.
 
-    A Serilog settings provider that reads from Microsoft.Extensions.Configuration sources, including .NET Core's appsettings.json file. By default, configuration is read from the Serilog section.
+- [Serilog.Sinks.Console](https://github.com/serilog/serilog-sinks-console): writes log events to the Windows Console or an ANSI terminal via standard output.
 
-- [Serilog.Sinks.Console](https://github.com/serilog/serilog-sinks-console):
+Following Elastic NuGet package is used to properly format logs for Elasticsearch:
 
-    A Serilog sink that writes log events to the Windows Console or an ANSI terminal via standard output.
+- [Elastic.CommonSchema.Serilog](https://github.com/elastic/ecs-dotnet): formats a Serilog event into a JSON representation that adheres to the Elastic Common Schema.
 
-### Elastic NuGet packages
+## Serilog implementation
 
-The following Elastic NuGet package is used to properly format logs for Elasticsearch:
-
-- [Elastic.CommonSchema.Serilog](https://github.com/elastic/ecs-dotnet)
-
-    Formats a Serilog event into a JSON representation that adheres to the Elastic Common Schema.
-
-## Implementation
-
-### NuGet packages
-
-You have to add the following packages in your csproj file.
+First, you have to add the following packages in your csproj file (you can update the version to the latest available for your .Net version).
 
     <PackageReference Include="Elastic.CommonSchema.Serilog" Version="1.5.3" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
@@ -102,13 +77,7 @@ You have to add the following packages in your csproj file.
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
 
-You can update the version to the latest available for your .Net version.
-
-### Serilog provider
-
-You then have to define Serilog as your log provider.
-
-In your Program.cs file, add the ConfigureLogging and UseSerilog as described below: 
+Then, you have to define Serilog as your log provider. In your Program.cs file, add the ConfigureLogging and UseSerilog as described below: 
 
     public static IHost BuildHost(string[] args) =>
             Host.CreateDefaultBuilder(args)
@@ -118,7 +87,7 @@ In your Program.cs file, add the ConfigureLogging and UseSerilog as described be
                 .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
                 .Build();
 
-The UseSerilog method sets Serilog as the logging provider. The AddSerilog method is a custom extension which will add Serilog to the logging pipeline and read the configuration from host configuration :
+The UseSerilog method sets Serilog as the logging provider. The AddSerilog method is a custom extension which will add Serilog to the logging pipeline and read the configuration from host configuration:
 
     public static ILoggingBuilder AddSerilog(this ILoggingBuilder builder, IConfiguration configuration)
     {
@@ -131,11 +100,7 @@ The UseSerilog method sets Serilog as the logging provider. The AddSerilog metho
         return builder;
     }
 
-### Serilog HTTP Request logging
-
-When using the default middleware for HTTP request logging, it will write HTTP request information like method, path, timing, status code and exception details in several events. To avoid this and use streamlined request loggin, you can use the middleware provided by Serilog.
-
-Add this in Startup.cs before any handlers whose activities should be logged.
+When using the default middleware for HTTP request logging, it will write HTTP request information like method, path, timing, status code and exception details in several events. To avoid this and use streamlined request logging, you can use the middleware provided by Serilog. Add UseSerilogRequestLogging in Startup.cs before any handlers whose activities should be logged.
 
     public void Configure(IApplicationBuilder app)
     {
@@ -150,13 +115,11 @@ Add this in Startup.cs before any handlers whose activities should be logged.
         // ...
     }
 
-### Serilog configuration 
+## Serilog configuration 
 
 As the Serilog configuration is read from host configuration, we will now set all configuration we need to the appsettings file.
 
-#### Production environment
-
-In Production environment, we will prepare our logs for Elasticsearch ingestion, so use JSON format and add all needed information to ou logs. 
+In Production environment, we will prepare logs for Elasticsearch ingestion, so use JSON format and add all needed information to logs. 
 
     {
         "Serilog": {
@@ -185,16 +148,14 @@ In Production environment, we will prepare our logs for Elasticsearch ingestion,
         // ...
     }
 
-The configuration (for Production environment) will :
+This configuration will:
 
-- set default log level to Warning except for "Microsoft.Hosting" "NetClient.Elastic" (our application) namespaces which will be Information
+- set default log level to Warning except for "Microsoft.Hosting" and "NetClient.Elastic" (our application) namespaces which will be Information
 - enrich log with log context, machine name, and some other useful data when available
 - add custom properties to each log event : Domain and DomainContext
 - write logs to console, using the Elastic JSON formatter for Serilog
 
-#### Development environment
-
-In Development, generally, we won't want to display our logs in JSON format and we will prefer having log level to Debug and minimal information, so, we will override this in the appsettings.Development.json file.
+In Development environment, generally, we won't want to display our logs in JSON format and we will prefer having minimal log level to Debug for our application, so, we will override this in the appsettings.Development.json file:
 
     {
         "Serilog": {
@@ -216,11 +177,11 @@ In Development, generally, we won't want to display our logs in JSON format and 
 
 ## Sending logs to Elasticsearch
 
-All the logs are written in the console, so they will be readable by using:
+All the logs are written in the console, and, as we use docker to deploy our application, they will be readable by using:
 
     docker container logs netclient-elastic
 
-To send the logs to Elasticseach, you will have to configure a filebeat agent with docker autodiscover for example.
+To send the logs to Elasticseach, you will have to configure a filebeat agent (for example, with docker autodiscover):
 
     filebeat.autodiscover:
         providers:
@@ -230,6 +191,8 @@ To send the logs to Elasticseach, you will have to configure a filebeat agent wi
                 type: container
                 paths:
                 - /var/lib/docker/containers/${data.container.id}/*.log
+
+But if your logs are stored on the filesystem, you can easily use the filestream input of filebeat.
 
 For more information about this filebeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/filebeat/config/filebeat.yml
 
