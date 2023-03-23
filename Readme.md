@@ -1,32 +1,27 @@
 - [Context](#context)
 - [Logs (via Serilog)](#logs-via-serilog)
+  - [What is Serilog?](#what-is-serilog)
   - [NuGet packages](#nuget-packages)
   - [Serilog implementation](#serilog-implementation)
   - [Serilog configuration](#serilog-configuration)
   - [Sending logs to Elasticsearch](#sending-logs-to-elasticsearch)
 - [Health checks (via Microsoft AspNetCore HealthChecks)](#health-checks-via-microsoft-aspnetcore-healthchecks)
+  - [What are health checks?](#what-are-health-checks)
   - [NuGet packages](#nuget-packages-1)
-    - [Xabaril NuGet packages](#xabaril-nuget-packages)
-  - [Implementation](#implementation)
-    - [NuGet packages](#nuget-packages-2)
-    - [HealthCheck service registration](#healthcheck-service-registration)
-    - [HealthCheck endpoints maps](#healthcheck-endpoints-maps)
-  - [Sending healthchecks to Elasticsearch](#sending-healthchecks-to-elasticsearch)
+  - [Health checks implementation](#health-checks-implementation)
+  - [Sending health checks to Elasticsearch](#sending-health-checks-to-elasticsearch)
 - [Metrics (via Prometheus)](#metrics-via-prometheus)
-  - [NuGet packages](#nuget-packages-3)
-    - [Prometheus for .Net NuGet packages](#prometheus-for-net-nuget-packages)
-  - [Implementation](#implementation-1)
-    - [NuGet packages](#nuget-packages-4)
-    - [Prometheus metrics configuration](#prometheus-metrics-configuration)
-    - [Prometheus endpoints maps](#prometheus-endpoints-maps)
-    - [Forward HealthChecks to Prometheus](#forward-healthchecks-to-prometheus)
-    - [Business metrics](#business-metrics)
+  - [What is Prometheus?](#what-is-prometheus)
+  - [NuGet packages](#nuget-packages-2)
+  - [Prometheus implementation](#prometheus-implementation)
+  - [Forward Health checks to Prometheus](#forward-health-checks-to-prometheus)
+  - [Business metrics](#business-metrics)
 - [Traces (via Elastic APM agent)](#traces-via-elastic-apm-agent)
+  - [What is Elastic APM agent?](#what-is-elastic-apm-agent)
   - [Supported technologies](#supported-technologies)
-  - [Implementation](#implementation-2)
+  - [Elastic APM Implementation](#elastic-apm-implementation)
     - [Profiler auto instrumentation](#profiler-auto-instrumentation)
-    - [NuGet packages](#nuget-packages-5)
-    - [Elastic APM integration](#elastic-apm-integration)
+    - [NuGet](#nuget)
     - [Elastic APM configuration](#elastic-apm-configuration)
 
 # Context
@@ -46,6 +41,8 @@ There are two projects :
 - NetClient.Elastic : a Web client with some razor pages on / and a persons view which interact with NetApi.Elastic
 
 # Logs (via Serilog)
+
+## What is Serilog?
 
 Like many other libraries for .NET, Serilog provides diagnostic logging to files, the console, and elsewhere. It is easy to set up, has a clean API, and is portable between recent .NET platforms. Unlike other logging libraries, Serilog is built with powerful structured event data in mind.
 
@@ -198,6 +195,8 @@ For more information about this filebeat configuration, you can have a look to :
 
 # Health checks (via Microsoft AspNetCore HealthChecks)
 
+## What are health checks?
+
 ASP.NET Core offers Health Checks Middleware and libraries for reporting the health of app infrastructure components.
 
 Health checks are exposed by an app as HTTP endpoints. Health check endpoints can be configured for various real-time monitoring scenarios:
@@ -212,29 +211,19 @@ Source : [Health checks in ASP.NET Core](https://learn.microsoft.com/en-us/aspne
 
 ## NuGet packages
 
-### Xabaril NuGet packages
+Following Xabaril NuGet package is used:
 
-The following Xabaril NuGet package is used:
+- [AspNetCore.HealthChecks.UI.Client](https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks#configuration): formats healthchecks endpoint response in a JSON representation.
 
-- [AspNetCore.HealthChecks.UI.Client](https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks#configuration)
+There are a lot of NuGet packages provided by [Xabaril](https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks) which can help you to add healthchecks for your application dependencies: Azure services, databases, events bus, network, ...
 
-    Formats healthchecks endpoint response in a JSON representation.
+## Health checks implementation
 
-There are a lot of NuGet packages provided by [Xabaril](https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks) which can help you to add healthchecks for your application dependencies : Azure services, databases, events bus, network, ...
-
-## Implementation
-
-### NuGet packages
-
-You have to add the following packages in your csproj file.
+First, you have to add the following packages in your csproj file (you can update the version to the latest available for your .Net version):
 
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.5" />
 
-You can update the version to the latest available for your .Net version.
-
-### HealthCheck service registration
-
-The first step is to register the HealthCheck Service. This is done here in a custom extension which is used in the ConfigureServices of the Startup file.
+Then, you have to register the HealthCheck Service. This is done here in a custom extension which is used in the ConfigureServices of the Startup file:
 
     public virtual void ConfigureServices(IServiceCollection services)
     {
@@ -250,11 +239,9 @@ The first step is to register the HealthCheck Service. This is done here in a cu
         return services;
     }
 
-This "self" check is just here to say that if the endpoint responds, that's because the application is alive.
+This "self" check is just here to say that if the endpoint responds (the application is alive).
 
-### HealthCheck endpoints maps
-
-The second step is to map endpoints for health checks.
+The third step is to map endpoints for health checks:
 
     public void Configure(IApplicationBuilder app)
     {
@@ -278,23 +265,23 @@ The second step is to map endpoints for health checks.
 
 The first map exposes the /liveness endpoint with the self check described in the previous section.
 
-The result of a call to http://localhost:8080/liveness will just be :
+The result of a call to http://localhost:8080/liveness will just be:
 
     Status code : 200 (Ok)
     Content : Healthy
 
 The second map exposes the /hc endpoint with an aggregation of all healthchecks defined in a JSON format.
 
-The result of a call to http://localhost:8080/hc will be :
+The result of a call to http://localhost:8080/hc will be:
 
     Status code : 200 (Ok)
     Content : {"status":"Healthy","totalDuration":"00:00:00.0027779","entries":{"self":{"data":{},"duration":"00:00:00.0008869","status":"Healthy","tags":[]}}}
 
-## Sending healthchecks to Elasticsearch
+## Sending health checks to Elasticsearch
 
 All the healthchecks are available on the /hc endpoint.
 
-To send the healthchecks to Elasticseach, you will have to configure a metricbeat agent with docker autodiscover for example.
+To send the healthchecks to Elasticseach, you will have to configure a metricbeat agent with docker autodiscover for example:
 
     metricbeat.modules:
     - module: http
@@ -307,21 +294,23 @@ To send the healthchecks to Elasticseach, you will have to configure a metricbea
   
 For more information about this metricbeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/metricbeat/config/modules.d/http.yml
 
-You can either use heartbeat agent and the /liveness endpoint in order to use the Uptime app in Kibana.
+You can also use heartbeat agent and the /liveness endpoint in order to use the Uptime app in Kibana:
 
     heartbeat.monitors:
     - type: http
-    id: http-monitor
-    name: HTTP Monitor
-    schedule: '@every 5s' # every 5 seconds from start of beat
-    urls: 
-    - "http://host.docker.internal:8080/liveness"
+      id: http-monitor
+      name: HTTP Monitor
+      schedule: '@every 5s' # every 5 seconds from start of beat
+      urls: 
+      - "http://host.docker.internal:8080/liveness"
 
 For more information about this heartbeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/heartbeat/config/monitors.d/http.yml
 
-In the Prometheus section, we will have another way to send healt checks to Elasticsearch. 
+When using Prometheus, it is possible to forward health checks metrics to Prometheus endpoint, and retrieve it with the same configuration of metricbeat, in a prometheus module. 
 
 # Metrics (via Prometheus)
+
+## What is Prometheus?
 
 Prometheus collects and stores its metrics as time series data, i.e. metrics information is stored with the timestamp at which it was recorded, alongside optional key-value pairs called labels.
 
@@ -329,9 +318,7 @@ Source : [Prometheus](https://prometheus.io/)
 
 ## NuGet packages
 
-### Prometheus for .Net NuGet packages
-
-The following Prometheus for .Net NuGet package is used:
+The following Prometheus for .Net NuGet packages are used:
 
 - [prometheus-net](https://github.com/prometheus-net/prometheus-net)
 - [prometheus-net.AspNetCore](https://github.com/prometheus-net/prometheus-net#aspnet-core-exporter-middleware)
@@ -339,19 +326,13 @@ The following Prometheus for .Net NuGet package is used:
 
 These are .NET libraries for instrumenting your applications and exporting metrics to Prometheus.
 
-## Implementation
+## Prometheus implementation
 
-### NuGet packages
-
-You have to add the following packages in your csproj file.
+First, you have to add the following packages in your csproj file (you can update the version to the latest available for your .Net version).
 
     <PackageReference Include="prometheus-net" Version="8.0.0" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
     <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="8.0.0" />
-
-You can update the version to the latest available for your .Net version.
-
-### Prometheus metrics configuration
 
 By default, Prometheus add some application metrics about .Net (Memory, CPU, garbaging, ...). As we plan to use APM agent, we don't want Prometheus to add this metrics, so we can suppress them. We will also add some static labels to each metrics in order to be able to add contextual information from our application, as we did it for logs.
 
@@ -369,8 +350,6 @@ By default, Prometheus add some application metrics about .Net (Memory, CPU, gar
 
         // ...     
     }
-
-### Prometheus endpoints maps
 
 We also have to map endpoints for metrics.
 
@@ -405,7 +384,7 @@ The result is the below:
     myapp_gauge3{service="service1",domain="NetClient",domain_context="NetClient.Elastic"} 3872
     ...
 
-### Forward HealthChecks to Prometheus
+## Forward Health checks to Prometheus
 
 We can easily forwar our health checks to Prometheus, to avoir using http module from metricbeat and retrieve all metrics including health checks from Prometheus module.
 By the way, we will also benefit from our labels if defined.
@@ -429,7 +408,7 @@ This is done here in our custom extension which is used in the ConfigureServices
         return services;
     }
 
-### Business metrics
+## Business metrics
 
 You have a full sample of hox to create business metrics in the DataService class. In this sample, metrics are generated in a background service, so they have ramdom values and are attached to a label named service. The delay of this background task is configurable in the appsettings.json file (DataServiceExecutionDelay).
 
@@ -448,6 +427,8 @@ To apply a label and a value to a metric, use this kind of code:
 
 # Traces (via Elastic APM agent)
 
+## What is Elastic APM agent?
+
 The Elastic APM .NET Agent automatically measures the performance of your application and tracks errors. It has built-in support for the most popular frameworks, as well as a simple API which allows you to instrument any application.
 
 The agent auto-instruments supported technologies and records interesting events, like HTTP requests and database queries. To do this, it uses built-in capabilities of the instrumented frameworks like Diagnostic Source, an HTTP module for IIS, or IDbCommandInterceptor for Entity Framework. This means that for the supported technologies, there are no code changes required beyond enabling auto-instrumentation.
@@ -460,7 +441,7 @@ Choosing between Profiler auto instrumentation and NuGet use will depend on your
 
 See these pages for more information: [Supported technologies](https://www.elastic.co/guide/en/apm/agent/dotnet/current/supported-technologies.html)
 
-## Implementation
+## Elastic APM Implementation
 
 ### Profiler auto instrumentation
 
@@ -517,7 +498,7 @@ In our case, as we use Docker, it would be easy to add Profiler auto instrumenta
 
 You can find all the documentation at this place: [Profiler Auto instrumentation](https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-auto-instrumentation.html)
 
-### NuGet packages
+### NuGet
 
 But as this is not a legacy application and we want to be able to automatically add TraceId and TransactionId to our logs and eventually use NuGet features, we will prefer the NuGet use.
 
@@ -525,8 +506,6 @@ The following Elastic for .Net NuGet packages are used:
 
 - [Elastic.Apm.NetCoreAll](https://github.com/elastic/apm-agent-dotnet)
 - [Elastic.Apm.SerilogEnricher](https://github.com/elastic/ecs-dotnet/tree/main/src/Elastic.Apm.SerilogEnricher)
-
-### Elastic APM integration
 
 To enable Elastic APM, you just have one line to add in you Configure method:
 
