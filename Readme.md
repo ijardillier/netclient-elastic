@@ -189,7 +189,7 @@ You can add a simple log by using:
 
 Serilog supports destructuring, allowing simple property or complex objects to be passed as parameters in your logs:
 
-    # with a aimple property:
+    # with a simple property:
     _logger.LogInformation("Person with id {Id} updated", id);
 
     # with a complex object:
@@ -199,9 +199,9 @@ This can be very useful for example in a CQRS application to log queries and com
 
 See [Serilog documentation](https://github.com/serilog/serilog/wiki) for all information.
 
-In some case, you don't want a field from a complex object to be stored in you logs (for example, a password in a login command) or you may want to store the field with another name in your logs. You can use the NuGet [Destructurama.Attributed](https://github.com/destructurama/attributed) for this use case.
+In some case, you don't want a field from a complex object to be stored in you logs (for example, a password in a login command) or you may want to store the field with another name in your logs. You can use the NuGet [Destructurama.Attributed](https://github.com/destructurama/attributed) for these use cases.
 
-Add the NuGet in you csproj:
+Add the NuGet in your csproj:
 
     <PackageReference Include="Destructurama.Attributed" Version="3.0.0" />
 
@@ -212,7 +212,7 @@ Update the logger configuration in the AddSerilog extension method with the *.De
         .Destructure.UsingAttributes()
         .CreateLogger();
 
-You can now add any attributes from Destructurama as [NotLogged] on your propeties:
+You can now add any attributes from Destructurama as [NotLogged] on your properties:
 
     [NotLogged]
     public string Password { get; set; }
