@@ -37,7 +37,7 @@ namespace NetApi.Elastic.Controllers
         [HttpGet("{id}")]
         public Person Get(int id)
         {
-            _logger.LogDebug($"Getting person with id {id}");
+            _logger.LogDebug("Getting person with id {Id}", id);
 
             return persons.Where(x => x.Id == id).FirstOrDefault();
         }
@@ -57,23 +57,23 @@ namespace NetApi.Elastic.Controllers
         [HttpPut("{id}")]
         public void Put(int id, [FromBody] Person person)
         {
-            _logger.LogDebug($"Updating person with id {id}");
+            _logger.LogDebug("Updating person with id {Id}", id);
 
             persons.Remove(persons.Where(x => x.Id == id).FirstOrDefault());
             persons.Add(person);
 
-            _logger.LogInformation($"Person with id {id} updated");
+            _logger.LogInformation("Person with id {Id} updated", id);
         }
 
         // DELETE api/<PersonsController>/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
-            _logger.LogDebug($"Removing person with id {id}");
+            _logger.LogDebug("Removing person with id {Id}", id);
 
             persons.Remove(persons.Where(x => x.Id == id).FirstOrDefault());
 
-            _logger.LogInformation($"Person with id {id} removed");
+            _logger.LogInformation("Person with id {Id} removed", id);
         }
     }
 }

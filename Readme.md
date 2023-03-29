@@ -6,6 +6,7 @@
   - [Serilog configuration](#serilog-configuration)
   - [Writing logs](#writing-logs)
   - [Sending logs to Elasticsearch](#sending-logs-to-elasticsearch)
+  - [Analyse logs in Kibana](#analyse-logs-in-kibana)
 - [Health checks (via Microsoft AspNetCore HealthChecks)](#health-checks-via-microsoft-aspnetcore-healthchecks)
   - [What are health checks?](#what-are-health-checks)
   - [NuGet packages](#nuget-packages-1)
@@ -186,17 +187,17 @@ You can add a simple log by using:
 
     _logger.LogDebug("Getting persons");
 
-Serilog supports destructuring, allowing complex objects to be passed as parameters in your logs:
+Serilog supports destructuring, allowing simple property or complex objects to be passed as parameters in your logs:
 
     # with a aimple property:
-    _logger.LogInformation($"Person with id {id} updated");
+    _logger.LogInformation("Person with id {Id} updated", id);
 
     # with a complex object:
     _logger.LogInformation("Person {@person} added", person);
 
 This can be very useful for example in a CQRS application to log queries and commands.
 
-See [Serilog documentation](https://github.com/serilog/serilog/wiki) for all informaiton.
+See [Serilog documentation](https://github.com/serilog/serilog/wiki) for all information.
 
 In some case, you don't want a field from a complex object to be stored in you logs (for example, a password in a login command) or you may want to store the field with another name in your logs. You can use the NuGet [Destructurama.Attributed](https://github.com/destructurama/attributed) for this use case.
 
@@ -214,7 +215,7 @@ Update the logger configuration in the AddSerilog extension method with the *.De
 You can now add any attributes from Destructurama as [NotLogged] on your propeties:
 
     [NotLogged]
-    public string Country { get; set; }
+    public string Password { get; set; }
 
 ## Sending logs to Elasticsearch
 
@@ -236,6 +237,45 @@ To send the logs to Elasticseach, you will have to configure a filebeat agent (f
 But if your logs are stored on the filesystem, you can easily use the filestream input of filebeat.
 
 For more information about this filebeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/filebeat/config/filebeat.yml
+
+## Analyse logs in Kibana
+
+You can check how logs are ingested in the Discover module:
+
+![Logs on Discover](Logs_Discover.png)
+
+Fields present in our logs and compliant with ECS are automatically set (@timestamp, log.level, event.action, message, ...) thanks to the EcsTextFormatter.
+Added fields like *domain*, *domain_context*, *id* or *person* in our logs are stored in the metadata object (flattened).
+
+The log level is dependant of the method used in the code (Verbose, Debug, Information, Warning, Error, Fatal). It is stored as keyword so you can easily use it for filtering, aggregation, .... You can find all error logs with (in KQL):
+
+    log.level: "Error"
+
+We can see that, for the added action log, Serilog automatically generate *message* field with all properties defined in the person instance, due to destructuring. In this case, metadata are stored as following:
+
+    {
+        "message_template": "Person {@person} added",
+        "request_id": "0HMPG79NSQK0U:00000008",
+        "connection_id": "0HMPG79NSQK0U",
+        "environment_name": "Production",
+        "elastic_apm_transaction_id": "260cc4ce2c425d5b",
+        "domain_context": "NetApi.Elastic",
+        "person": {
+            "id": 7,
+            "full_name": "Anil",
+            "email": "anil@gmail.com",
+            "city": "Tokyo",
+            "country": "Japan",
+            "$type": "Person"
+        },
+        "request_path": "/api/v1.0/persons",
+        "elastic_apm_trace_id": "5a2e6f2ccb298b5b2eeea36772933094",
+        "domain": "NetApi"
+    }
+
+This field is queryable by using, for example (in KQL):
+
+    metadata.person.country : "Japan"
 
 # Health checks (via Microsoft AspNetCore HealthChecks)
 
