@@ -271,7 +271,6 @@ We can see that, for the added action log, Serilog automatically generate *messa
         "person": {
             "id": 7,
             "full_name": "Anil",
-            "email": "anil@gmail.com",
             "city": "Tokyo",
             "country": "Japan",
             "$type": "Person"
