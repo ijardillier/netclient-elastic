@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NetApi.Elastic.Models;
 
-
 namespace NetApi.Elastic.Controllers
 {
     [Route("api/v{version:apiVersion}/[controller]")]
@@ -47,11 +46,11 @@ namespace NetApi.Elastic.Controllers
         [HttpPost]
         public void Post([FromBody] Person person)
         {
-            _logger.LogDebug("Adding person");
+            _logger.LogDebug("Adding person {@person}", person);
 
             persons.Add(person);
 
-            _logger.LogInformation("Person added");
+            _logger.LogInformation("Person {@person} added", person);
         }
 
         // PUT api/<PersonsController>/5

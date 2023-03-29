@@ -4,6 +4,7 @@
   - [NuGet packages](#nuget-packages)
   - [Serilog implementation](#serilog-implementation)
   - [Serilog configuration](#serilog-configuration)
+  - [Writing logs](#writing-logs)
   - [Sending logs to Elasticsearch](#sending-logs-to-elasticsearch)
 - [Health checks (via Microsoft AspNetCore HealthChecks)](#health-checks-via-microsoft-aspnetcore-healthchecks)
   - [What are health checks?](#what-are-health-checks)
@@ -171,6 +172,49 @@ In Development environment, generally, we won't want to display our logs in JSON
             ]
         }
     }
+
+## Writing logs
+
+Serilog is configured to use *Microsoft.Extensions.Logging.ILogger* interface. You can retrieve an instance of ILogger anywhere in your code with .Net IoC container:
+
+    public PersonsController(ILogger<PersonsController> logger)
+    {
+        _logger = logger;
+    }
+
+You can add a simple log by using:
+
+    _logger.LogDebug("Getting persons");
+
+Serilog supports destructuring, allowing complex objects to be passed as parameters in your logs:
+
+    # with a aimple property:
+    _logger.LogInformation($"Person with id {id} updated");
+
+    # with a complex object:
+    _logger.LogInformation("Person {@person} added", person);
+
+This can be very useful for example in a CQRS application to log queries and commands.
+
+See [Serilog documentation](https://github.com/serilog/serilog/wiki) for all informaiton.
+
+In some case, you don't want a field from a complex object to be stored in you logs (for example, a password in a login command) or you may want to store the field with another name in your logs. You can use the NuGet [Destructurama.Attributed](https://github.com/destructurama/attributed) for this use case.
+
+Add the NuGet in you csproj:
+
+    <PackageReference Include="Destructurama.Attributed" Version="3.0.0" />
+
+Update the logger configuration in the AddSerilog extension method with the *.Destructure.UsingAttributes()* method:
+
+    Log.Logger = new LoggerConfiguration()
+        .ReadFrom.Configuration(configuration)
+        .Destructure.UsingAttributes()
+        .CreateLogger();
+
+You can now add any attributes from Destructurama as [NotLogged] on your propeties:
+
+    [NotLogged]
+    public string Country { get; set; }
 
 ## Sending logs to Elasticsearch
 

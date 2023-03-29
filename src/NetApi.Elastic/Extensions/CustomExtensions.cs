@@ -1,3 +1,4 @@
+using Destructurama;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Prometheus;
 using Serilog;
@@ -21,6 +22,7 @@ namespace NetApi.Elastic.Extensions
         {
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
+                .Destructure.UsingAttributes()
                 .CreateLogger();
 
             builder.AddSerilog();

@@ -29,7 +29,7 @@ namespace NetClient.Elastic.Tasks
         {
             _logger.LogDebug("{Source} background task is starting.", nameof(DataService));
 
-            cancellationToken.Register(() => _logger.LogDebug("#1 {Source} background task is stopping.", nameof(DataService)));
+            cancellationToken.Register(() => _logger.LogDebug("{Source} background task is stopping.", nameof(DataService)));
 
             while (!cancellationToken.IsCancellationRequested)
             {
