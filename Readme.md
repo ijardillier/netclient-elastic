@@ -233,6 +233,14 @@ To send the logs to Elasticseach, you will have to configure a filebeat agent (f
                 type: container
                 paths:
                 - /var/lib/docker/containers/${data.container.id}/*.log
+                processors:
+                  - decode_json_fields:
+                        fields: ["message"]
+                        process_array: false
+                        max_depth: 1
+                        target: ""
+                        overwrite_keys: true
+                        add_error_key: true
 
 But if your logs are stored on the filesystem, you can easily use the filestream input of filebeat.
 
@@ -251,7 +259,7 @@ The log level is dependant of the method used in the code (Verbose, Debug, Infor
 
     log.level: "Error"
 
-We can see that, for the added action log, Serilog automatically generate *message* field with all properties defined in the person instance, due to destructuring. In this case, metadata are stored as following:
+We can see that, for the added action log, Serilog automatically generate *message* field with all properties defined in the person instance (except the Email property, which is tagged as *NotLogged*), due to destructuring. In this case, metadata are stored as following:
 
     {
         "message_template": "Person {@person} added",
