@@ -244,7 +244,7 @@ To send the logs to Elasticseach, you will have to configure a filebeat agent (f
 
 But if your logs are stored on the filesystem, you can easily use the filestream input of filebeat.
 
-For more information about this filebeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/filebeat/config/filebeat.yml
+For more information about this filebeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/extensions/beats/filebeat/config/filebeat.yml
 
 ## Analyse logs in Kibana
 
@@ -304,9 +304,9 @@ Source : [Health checks in ASP.NET Core](https://learn.microsoft.com/en-us/aspne
 
 Following Xabaril NuGet package is used:
 
-- [AspNetCore.HealthChecks.UI.Client](https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks#configuration): formats healthchecks endpoint response in a JSON representation.
+- [AspNetCore.HealthChecks.UI.Client](https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks#configuration): formats health checks endpoint response in a JSON representation.
 
-There are a lot of NuGet packages provided by [Xabaril](https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks) which can help you to add healthchecks for your application dependencies: Azure services, databases, events bus, network, ...
+There are a lot of NuGet packages provided by [Xabaril](https://github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks) which can help you to add health checks for your application dependencies: Azure services, databases, events bus, network, ...
 
 ## Health checks implementation
 
@@ -314,7 +314,7 @@ First, you have to add the following packages in your csproj file (you can updat
 
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.5" />
 
-Then, you have to register the HealthCheck Service. This is done here in a custom extension which is used in the ConfigureServices of the Startup file:
+Then, you have to register the HealthCheck service. This is done here in a custom extension which is used in the ConfigureServices of the Startup file:
 
     public virtual void ConfigureServices(IServiceCollection services)
     {
@@ -370,20 +370,20 @@ The result of a call to http://localhost:8080/hc will be:
 
 ## Sending health checks to Elasticsearch
 
-All the healthchecks are available on the /hc endpoint.
+All the health checks are available on the /hc endpoint.
 
-To send the healthchecks to Elasticseach, you will have to configure a metricbeat agent with docker autodiscover for example:
+To send the health checks to Elasticseach, you will have to configure a metricbeat agent with http module:
 
     metricbeat.modules:
     - module: http
       metricsets:
       - json
       period: 10s
-      hosts: ["localhost:8080"]
+      hosts: ["host.docker.internal:8080"]
       namespace: "aspnet_healthchecks"
       path: "/hc"
   
-For more information about this metricbeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/metricbeat/config/modules.d/http.yml
+For more information about this metricbeat configuration, you can have a look to: https://github.com/ijardillier/docker-elk/blob/master/extensions/beats/metricbeat/config/metricbeat.yml
 
 You can also use heartbeat agent and the /liveness endpoint in order to use the Uptime app in Kibana:
 
@@ -395,9 +395,9 @@ You can also use heartbeat agent and the /liveness endpoint in order to use the 
       urls: 
       - "http://host.docker.internal:8080/liveness"
 
-For more information about this heartbeat configuration, you can have a look to : https://github.com/ijardillier/docker-elk/blob/master/heartbeat/config/monitors.d/http.yml
+For more information about this heartbeat configuration, you can have a look to: https://github.com/ijardillier/docker-elk/blob/master/extensions/beats/heartbeat/config/heartbeat.yml
 
-When using Prometheus, it is possible to forward health checks metrics to Prometheus endpoint, and retrieve it with the same configuration of metricbeat, in a prometheus module. 
+When using Prometheus, it is possible to forward health checks metrics to Prometheus endpoint, and retrieve it with the same configuration of metricbeat, in a prometheus module. We will implement this in the next article.
 
 # Metrics (via Prometheus)
 
