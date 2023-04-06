@@ -12,12 +12,15 @@
   - [NuGet packages](#nuget-packages-1)
   - [Health checks implementation](#health-checks-implementation)
   - [Sending health checks to Elasticsearch](#sending-health-checks-to-elasticsearch)
+  - [Analyse health checks in Kibana](#analyse-health-checks-in-kibana)
 - [Metrics (via Prometheus)](#metrics-via-prometheus)
   - [What is Prometheus?](#what-is-prometheus)
   - [NuGet packages](#nuget-packages-2)
   - [Prometheus implementation](#prometheus-implementation)
   - [Forward Health checks to Prometheus](#forward-health-checks-to-prometheus)
   - [Business metrics](#business-metrics)
+  - [Sending metrics to Elasticsearch](#sending-metrics-to-elasticsearch)
+  - [Analyse metrics in Kibana](#analyse-metrics-in-kibana)
 - [Traces (via Elastic APM agent)](#traces-via-elastic-apm-agent)
   - [What is Elastic APM agent?](#what-is-elastic-apm-agent)
   - [Supported technologies](#supported-technologies)
@@ -330,7 +333,7 @@ Then, you have to register the HealthCheck service. This is done here in a custo
         return services;
     }
 
-This "self" check is just here to say that if the endpoint responds (the application is alive).
+This "self" check is just here to say that if the endpoint responds (the application is alive). You can also manage Unhealthy and Degraded mode if needed.
 
 The third step is to map endpoints for health checks:
 
@@ -361,7 +364,7 @@ The result of a call to http://localhost:8080/liveness will just be:
     Status code : 200 (Ok)
     Content : Healthy
 
-The second map exposes the /hc endpoint with an aggregation of all healthchecks defined in a JSON format.
+The second map exposes the /hc endpoint with an aggregation of all health checks defined in a JSON format.
 
 The result of a call to http://localhost:8080/hc will be:
 
@@ -380,7 +383,7 @@ To send the health checks to Elasticseach, you will have to configure a metricbe
       - json
       period: 10s
       hosts: ["host.docker.internal:8080"]
-      namespace: "aspnet_healthchecks"
+      namespace: "healthcheck"
       path: "/hc"
   
 For more information about this metricbeat configuration, you can have a look to: https://github.com/ijardillier/docker-elk/blob/master/extensions/beats/metricbeat/config/metricbeat.yml
@@ -398,6 +401,22 @@ You can also use heartbeat agent and the /liveness endpoint in order to use the 
 For more information about this heartbeat configuration, you can have a look to: https://github.com/ijardillier/docker-elk/blob/master/extensions/beats/heartbeat/config/heartbeat.yml
 
 When using Prometheus, it is possible to forward health checks metrics to Prometheus endpoint, and retrieve it with the same configuration of metricbeat, in a prometheus module. We will implement this in the next article.
+
+## Analyse health checks in Kibana
+
+You can check how health checks are ingested in the Discover module:
+
+With Metricbeat:
+
+![Health checks with Metricbeat on Discover](HealthChecks_Discover_Metricbeat.png)
+
+With Heartbeat:
+
+![Health checks with Heartbeat on Discover](HealthChecks_Discover_Heartbeat.png)
+
+You can see how health checks are displayed in the Uptime App:
+
+![Health checks on Uptime App](HealthChecks_Uptime.png)
 
 # Metrics (via Prometheus)
 
@@ -425,7 +444,7 @@ First, you have to add the following packages in your csproj file (you can updat
     <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
     <PackageReference Include="prometheus-net.AspNetCore.HealthChecks" Version="8.0.0" />
 
-By default, Prometheus add some application metrics about .Net (Memory, CPU, garbaging, ...). As we plan to use APM agent, we don't want Prometheus to add this metrics, so we can suppress them. We will also add some static labels to each metrics in order to be able to add contextual information from our application, as we did it for logs.
+By default, Prometheus .Net library add some application metrics about .Net (Memory, CPU, garbaging, ...). As we plan to use APM agent, we don't want it to add this metrics, so we can suppress them. We will also add some static labels to each metrics in order to be able to add contextual information from our application, as we did it for logs:
 
     public virtual void ConfigureServices(IServiceCollection services)
     {
@@ -442,7 +461,7 @@ By default, Prometheus add some application metrics about .Net (Memory, CPU, gar
         // ...     
     }
 
-We also have to map endpoints for metrics.
+We also have to map endpoints for metrics:
 
     public void Configure(IApplicationBuilder app)
     {
@@ -477,8 +496,7 @@ The result is the below:
 
 ## Forward Health checks to Prometheus
 
-We can easily forwar our health checks to Prometheus, to avoir using http module from metricbeat and retrieve all metrics including health checks from Prometheus module.
-By the way, we will also benefit from our labels if defined.
+We can easily forward our health checks (described previously) to Prometheus endpoint, to avoid using http module from Metricbeat and retrieve all metrics including health checks from Metricbeat Prometheus module. By the way, we will also benefit from our static labels if defined.
 
 This is done here in our custom extension which is used in the ConfigureServices of the Startup file.
 
@@ -501,13 +519,13 @@ This is done here in our custom extension which is used in the ConfigureServices
 
 ## Business metrics
 
-You have a full sample of hox to create business metrics in the DataService class. In this sample, metrics are generated in a background service, so they have ramdom values and are attached to a label named service. The delay of this background task is configurable in the appsettings.json file (DataServiceExecutionDelay).
+Prometheus .Net library offers an easy way to add business metrics.
 
 To create a new metric, you just have to instantiate an new counter, gauge, ...:
 
     private readonly Gauge Gauge1 = Metrics.CreateGauge("myapp_gauge1", "A simple gauge 1");
 
-If you need to add attached labels, you have to add a Configuration:
+If you need to add attached labels, you have to add a configuration:
 
     private static readonly GaugeConfiguration configuration = new GaugeConfiguration { LabelNames = new[] { "service" }};
     private readonly Gauge Gauge2 = Metrics.CreateGauge("myapp_gauge1", "A simple gauge 1", configuration);
@@ -515,6 +533,33 @@ If you need to add attached labels, you have to add a Configuration:
 To apply a label and a value to a metric, use this kind of code:
 
     Gauge1.WithLabels("service1").Set(_random.Next(1000, 2000));
+
+## Sending metrics to Elasticsearch
+
+All the metrics are available on the /metrics endpoint.
+
+In our example, we don't have any Prometheus server, so metricbeat will directly access metrics from the application metrics endpoint. But if you have a Prometheus server, you can add a new target in your scrape configuration.
+
+So, to send the metrics to Elasticseach, you will have to configure a metricbeat agent with prometheus module:
+
+    metricbeat.modules:
+    - module: prometheus
+      period: 10s
+      metricsets: ["collector"]
+      hosts: ["host.docker.internal:8080"]
+      metrics_path: /metrics
+  
+For more information about this metricbeat configuration, you can have a look to: https://github.com/ijardillier/docker-elk/blob/master/extensions/beats/metricbeat/config/metricbeat.yml
+
+## Analyse metrics in Kibana
+
+You can check how metrics are ingested in the Discover module:
+
+![Metrics on Discover](Metrics_Discover.png)
+
+You can see how metrics are displayed in the Metrics Explorer App:
+
+![Metrics on Metrics Explorer App](Metrics_Explorer.png)
 
 # Traces (via Elastic APM agent)
 
