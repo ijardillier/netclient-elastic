@@ -26,9 +26,8 @@
   - [Supported technologies](#supported-technologies)
   - [Elastic APM Implementation](#elastic-apm-implementation)
     - [Profiler auto instrumentation](#profiler-auto-instrumentation)
-    - [NuGet](#nuget)
-      - [Zero code change setup](#zero-code-change-setup)
-      - [.Net Core NuGet setup](#net-core-nuget-setup)
+    - [NuGet - Zero code change setup](#nuget---zero-code-change-setup)
+    - [NuGet - .Net Core  setup](#nuget---net-core--setup)
   - [Sending traces to Elasticsearch](#sending-traces-to-elasticsearch)
   - [Analyse traces in Kibana](#analyse-traces-in-kibana)
 
@@ -578,13 +577,13 @@ Source : [APM .Net Agent](https://www.elastic.co/guide/en/apm/agent/dotnet/curre
 
 Choosing between Profiler auto instrumentation and NuGet use will depend on your needs and supported technologies.
 
-See these pages for more information: [Supported technologies](https://www.elastic.co/guide/en/apm/agent/dotnet/current/supported-technologies.html)
+See these page for more information: [Supported technologies](https://www.elastic.co/guide/en/apm/agent/dotnet/current/supported-technologies.html)
 
 ## Elastic APM Implementation
 
 ### Profiler auto instrumentation
 
-In our case, as we use Docker, it would be easy to add Profiler auto instrumentation, we just have to add these lines in our Dockerfile :
+In our case, as we use Docker, it would be easy to add Profiler auto instrumentation, we just have to add these lines in our Dockerfile:
 
     ARG AGENT_VERSION=1.20.0
 
@@ -616,18 +615,18 @@ In our case, as we use Docker, it would be easy to add Profiler auto instrumenta
     # ...
 
     # # Configures whether profiling is enabled for the currently running process.
-    # ENV CORECLR_ENABLE_PROFILING=1
+    ENV CORECLR_ENABLE_PROFILING=1
     # # Specifies the GUID of the profiler to load into the currently running process.
-    # ENV CORECLR_PROFILER={FA65FE15-F085-4681-9B20-95E04F6C03CC}
+    ENV CORECLR_PROFILER={FA65FE15-F085-4681-9B20-95E04F6C03CC}
     # # Specifies the path to the profiler DLL to load into the currently running process (or 32-bit or 64-bit process).
-    # ENV CORECLR_PROFILER_PATH=/elastic_apm_profiler/libelastic_apm_profiler.so
+    ENV CORECLR_PROFILER_PATH=/elastic_apm_profiler/libelastic_apm_profiler.so
 
     # # Specifies the home directory of the profiler auto instrumentation. 
-    # ENV ELASTIC_APM_PROFILER_HOME=/elastic_apm_profiler
+    ENV ELASTIC_APM_PROFILER_HOME=/elastic_apm_profiler
     # # Specifies the path to the integrations.yml file that determines which methods to target for auto instrumentation.
-    # ENV ELASTIC_APM_PROFILER_INTEGRATIONS=/elastic_apm_profiler/integrations.yml
+    ENV ELASTIC_APM_PROFILER_INTEGRATIONS=/elastic_apm_profiler/integrations.yml
     # # Specifies the log level at which the profiler should log. 
-    # ENV ELASTIC_APM_PROFILER_LOG=warn
+    ENV ELASTIC_APM_PROFILER_LOG=warn
 
     # Core configuration options / Specifies the service name (ElasticApm:ServiceName).
     ENV ELASTIC_APM_SERVICE_NAME=NetApi-Elastic
@@ -653,9 +652,7 @@ You can find all the documentation at this place: [Profiler Auto instrumentation
 
 But, in our case, we don't need any feature provided by the Profiler auto instrumentation. So this code is just shown for example.
 
-### NuGet
-
-#### Zero code change setup
+### NuGet - Zero code change setup
 
 As we use .Net 6, we can also use the "zero code change" to integrate NuGet and be able to use NuGet features without changing any code. This is available when using .Net Core and .Net 5+. 
 
@@ -717,7 +714,7 @@ To do this, just add the following environment variables in the Dockerfile:
 
 But, with this implementation, we won't be able to make correlation with logs by adding transaction id and span id. 
 
-#### .Net Core NuGet setup
+### NuGet - .Net Core  setup
 
 So, we will prefer using NuGet integration, adding logs correlation, and be able to choose the features to integrate.
 
@@ -768,7 +765,7 @@ To add the transaction id and trace id to every Serilog log message that is crea
 
 The configuration has already been seen in the previous section.
 
-You just have to ensure you have a APM server available (this is now done with an elastic-agent with an APM integration in Fleet).
+You just have to ensure you have an APM server available (this is now done with an elastic-agent with an APM integration in Fleet).
 
 ## Analyse traces in Kibana
 
@@ -806,10 +803,10 @@ Then, on the APM App on Kibana, we have a lot of information thanks to our trace
 
 ![APM Logs](APM_Logs.png)
 
-An interesting view is the trace sample on the Transactions view. You can view the detailed trace for a transaction:
+- An interesting view is the trace sample on the Transactions view. You can view the detailed trace for a transaction:
 
 ![APM Transactions - Trace timeline](APM_TransactionsTraceTimeline.png)
 
-And you can also see related logs:
+- And you can also see related logs:
 
 ![APM Transactions - Trace logs](APM_TransactionsTraceLogs.png)
