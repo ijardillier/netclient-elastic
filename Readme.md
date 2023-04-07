@@ -724,7 +724,7 @@ The following Elastic for .Net NuGet packages are used:
 - [Elastic.Apm.NetCoreAll](https://github.com/elastic/apm-agent-dotnet)
 - [Elastic.Apm.SerilogEnricher](https://github.com/elastic/ecs-dotnet/tree/main/src/Elastic.Apm.SerilogEnricher)
 
-But if you prefer choosing the features you want to integrate, you can choose only the packages you are interesting in. The documentation is provided [here](https://github.com/elastic/apm-agent-dotnet#installation).
+But if you prefer choosing the features you want to integrate, you can choose only the packages you are interesting in instead of *Elastic.Apm.NetCoreAll*Elastic.Apm.NetCoreAll. The documentation is provided [here](https://github.com/elastic/apm-agent-dotnet#installation).
 
 To enable Elastic APM, you just have one line to add in your Configure method:
 
