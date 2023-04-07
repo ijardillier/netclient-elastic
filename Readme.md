@@ -27,7 +27,8 @@
   - [Elastic APM Implementation](#elastic-apm-implementation)
     - [Profiler auto instrumentation](#profiler-auto-instrumentation)
     - [NuGet](#nuget)
-    - [Elastic APM configuration](#elastic-apm-configuration)
+    - [Zero code change setup](#zero-code-change-setup)
+    - [.Net Core NuGet setup](#net-core-nuget-setup)
 
 # Context
 
@@ -438,7 +439,7 @@ These are .NET libraries for instrumenting your applications and exporting metri
 
 ## Prometheus implementation
 
-First, you have to add the following packages in your csproj file (you can update the version to the latest available for your .Net version).
+First, you have to add the following packages in your csproj file (you can update the version to the latest available for your .Net version):
 
     <PackageReference Include="prometheus-net" Version="8.0.0" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
@@ -498,7 +499,7 @@ The result is the below:
 
 We can easily forward our health checks (described previously) to Prometheus endpoint, to avoid using http module from Metricbeat and retrieve all metrics including health checks from Metricbeat Prometheus module. By the way, we will also benefit from our static labels if defined.
 
-This is done here in our custom extension which is used in the ConfigureServices of the Startup file.
+This is done here in our custom extension which is used in the ConfigureServices of the Startup file:
 
     public virtual void ConfigureServices(IServiceCollection services)
     {
@@ -599,9 +600,6 @@ In our case, as we use Docker, it would be easy to add Profiler auto instrumenta
     RUN wget -q https://github.com/elastic/apm-agent-dotnet/releases/download/v${AGENT_VERSION}/elastic_apm_profiler_${AGENT_VERSION}-linux-x64.zip && \
         unzip elastic_apm_profiler_${AGENT_VERSION}-linux-x64.zip -d /elastic_apm_profiler
 
-    RUN wget -q https://github.com/elastic/apm-agent-dotnet/releases/download/v${AGENT_VERSION}/ElasticApmAgent_${AGENT_VERSION}.zip && \
-        unzip ElasticApmAgent_${AGENT_VERSION}.zip -d /ElasticApmAgent
-
     # ...
 
     FROM build AS publish
@@ -612,45 +610,146 @@ In our case, as we use Docker, it would be easy to add Profiler auto instrumenta
 
     WORKDIR /elastic_apm_profiler
     COPY --from=publish /elastic_apm_profiler .
-    WORKDIR /ElasticApmAgent
-    COPY --from=publish /ElasticApmAgent .
 
     # ...
 
-    ENV CORECLR_ENABLE_PROFILING=1
-    ENV CORECLR_PROFILER={FA65FE15-F085-4681-9B20-95E04F6C03CC}
-    ENV CORECLR_PROFILER_PATH=/elastic_apm_profiler/libelastic_apm_profiler.so
-    ENV ELASTIC_APM_PROFILER_HOME=/elastic_apm_profiler
-    ENV ELASTIC_APM_PROFILER_INTEGRATIONS=/elastic_apm_profiler/integrations.yml
-    ENV DOTNET_STARTUP_HOOKS=/ElasticApmAgent/ElasticApmAgentStartupHook.dll
-    ENV ELASTIC_APM_SERVER_URL=https://host.docker.internal:8200
-    ENV ELASTIC_APM_VERIFY_SERVER_CERT=false
-    ENV ELASTIC_APM_SERVICE_NAME=NetClient-Elastic
-    ENV ELASTIC_APM_LOG_LEVEL=Information
+    # # Configures whether profiling is enabled for the currently running process.
+    # ENV CORECLR_ENABLE_PROFILING=1
+    # # Specifies the GUID of the profiler to load into the currently running process.
+    # ENV CORECLR_PROFILER={FA65FE15-F085-4681-9B20-95E04F6C03CC}
+    # # Specifies the path to the profiler DLL to load into the currently running process (or 32-bit or 64-bit process).
+    # ENV CORECLR_PROFILER_PATH=/elastic_apm_profiler/libelastic_apm_profiler.so
+
+    # # Specifies the home directory of the profiler auto instrumentation. 
+    # ENV ELASTIC_APM_PROFILER_HOME=/elastic_apm_profiler
+    # # Specifies the path to the integrations.yml file that determines which methods to target for auto instrumentation.
+    # ENV ELASTIC_APM_PROFILER_INTEGRATIONS=/elastic_apm_profiler/integrations.yml
+    # # Specifies the log level at which the profiler should log. 
+    # ENV ELASTIC_APM_PROFILER_LOG=warn
+
+    # Core configuration options / Specifies the service name (ElasticApm:ServiceName).
+    ENV ELASTIC_APM_SERVICE_NAME=NetApi-Elastic
+    # Core configuration options / Specifies the environment (ElasticApm:Environment)
     ENV ELASTIC_APM_ENVIRONMENT=Development
-    ENV ELASTIC_APM_STARTUP_HOOKS_LOGGING=1
+    # Core configuration options / Specifies the sample rate (ElasticApm:TransactionSampleRate).
+    # 1.0 : Dev purpose only, should be lowered in Production to reduce overhead.
+    ENV ELASTIC_APM_TRANSACTION_SAMPLE_RATE=1.0 
+
+    # Reporter configuration options / Specifies the URL for your APM Server (ElasticApm:ServerUrl).
+    ENV ELASTIC_APM_SERVER_URL=https://host.docker.internal:8200
+    # Reporter configuration options / Specifies if the agent should verify the SSL certificate if using HTTPS connection to the APM server (ElasticApm:VerifyServerCert). 
+    ENV ELASTIC_APM_VERIFY_SERVER_CERT=false
+    # Reporter configuration options / Specifies the path to a PEM-encoded certificate used for SSL/TLS by APM server (ElasticApm:ServerCert).
+    # ENV ELASTIC_APM_SERVER_CERT=
+
+    # Supportability configuration options / Sets the logging level for the agent (ElasticApm:LogLevel).
+    ENV ELASTIC_APM_LOG_LEVEL=Debug
 
     # ...
 
 You can find all the documentation at this place: [Profiler Auto instrumentation](https://www.elastic.co/guide/en/apm/agent/dotnet/current/setup-auto-instrumentation.html)
 
+But, in our case, we don't need any feature provided by the Profiler auto instrumentation. So this code is just shown for example.
+
 ### NuGet
 
-But as this is not a legacy application and we want to be able to automatically add TraceId and TransactionId to our logs and eventually use NuGet features, we will prefer the NuGet use.
+### Zero code change setup
+
+As we use .Net 6, we can also use the "zero code change" to integrate NuGet and be able to use NuGet features without changing any code. This is available when using .Net Core and .Net 5+. 
+
+To do this, just add the following environment variables in the Dockerfile:
+
+    ARG AGENT_VERSION=1.20.0
+
+    FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine3.16 AS base
+    
+    # ...
+
+    FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine3.16 AS build
+    ARG AGENT_VERSION
+
+    # install zip curl
+    RUN apk update && apk add zip wget
+
+    # pull down the zip file based on ${AGENT_VERSION} ARG and unzip
+    RUN wget -q https://github.com/elastic/apm-agent-dotnet/releases/download/v${AGENT_VERSION}/ElasticApmAgent_${AGENT_VERSION}.zip && \
+        unzip ElasticApmAgent_${AGENT_VERSION}would.zip -d /ElasticApmAgent
+
+    # ...
+
+    FROM build AS publish
+
+    # ...
+
+    FROM base AS final
+
+    WORKDIR /ElasticApmAgent
+    COPY --from=publish /ElasticApmAgent .
+
+    # ...
+
+    # Inject the APM agent at startup
+    ENV DOTNET_STARTUP_HOOKS=/ElasticApmAgent/ElasticApmAgentStartupHook.dll
+    # If the startup hook integration throws an exception, additional detail can be obtained by setting the Startup Hooks Logging variable.
+    ENV ELASTIC_APM_STARTUP_HOOKS_LOGGING=1
+
+    # Core configuration options / Specifies the service name (ElasticApm:ServiceName).
+    ENV ELASTIC_APM_SERVICE_NAME=NetApi-Elastic
+    # Core configuration options / Specifies the environment (ElasticApm:Environment)
+    ENV ELASTIC_APM_ENVIRONMENT=Development
+    # Core configuration options / Specifies the sample rate (ElasticApm:TransactionSampleRate).
+    # 1.0 : Dev purpose only, should be lowered in Production to reduce overhead.
+    ENV ELASTIC_APM_TRANSACTION_SAMPLE_RATE=1.0 
+
+    # Reporter configuration options / Specifies the URL for your APM Server (ElasticApm:ServerUrl).
+    ENV ELASTIC_APM_SERVER_URL=https://host.docker.internal:8200
+    # Reporter configuration options / Specifies if the agent should verify the SSL certificate if using HTTPS connection to the APM server (ElasticApm:VerifyServerCert). 
+    ENV ELASTIC_APM_VERIFY_SERVER_CERT=false
+    # Reporter configuration options / Specifies the path to a PEM-encoded certificate used for SSL/TLS by APM server (ElasticApm:ServerCert).
+    # ENV ELASTIC_APM_SERVER_CERT=
+
+    # Supportability configuration options / Sets the logging level for the agent (ElasticApm:LogLevel).
+    ENV ELASTIC_APM_LOG_LEVEL=Debug
+
+    # ...
+
+But, with this implementation, we won't be able to make correlation with logs by adding transaction id and span id. 
+
+### .Net Core NuGet setup
+
+So, we will prefer using NuGet integration, adding logs correlation, and be able to choose the features to integrate.
 
 The following Elastic for .Net NuGet packages are used:
 
 - [Elastic.Apm.NetCoreAll](https://github.com/elastic/apm-agent-dotnet)
 - [Elastic.Apm.SerilogEnricher](https://github.com/elastic/ecs-dotnet/tree/main/src/Elastic.Apm.SerilogEnricher)
 
-To enable Elastic APM, you just have one line to add in you Configure method:
+But if you prefer choosing the features you want to integrate, you can choose only the packages you are interesting in. The documentation is provided [here](https://github.com/elastic/apm-agent-dotnet#installation).
+
+To enable Elastic APM, you just have one line to add in your Configure method:
 
     public void Configure(IApplicationBuilder app)
     {
         app.UseAllElasticApm(Configuration);            
     }
 
-### Elastic APM configuration
+In the case you only want to activate some modules, you can use the UseElasticApm method instead, after adding needed packages:
+
+    app.UseElasticApm(Configuration,
+        new HttpDiagnosticsSubscriber(),  /* Enable tracing of outgoing HTTP requests */
+        new EfCoreDiagnosticsSubscriber()); /* Enable tracing of database calls through EF Core */
+
+To define the APM server to communicate with, add the following configuration in the appsettings.json file: 
+
+    {
+        "AllowedHosts": "*",
+        "ElasticApm": 
+        {
+            "ServerUrl":  "https://host.docker.internal:8200",
+            "LogLevel":  "Information",
+            "VerifyServerCert": false
+        }
+    }
 
 To add the transaction id and trace id to every Serilog log message that is created during a transaction, you just add to update your configuration in the appsettings.json file:
 
@@ -660,17 +759,5 @@ To add the transaction id and trace id to every Serilog log message that is crea
             /* ... */
             "Enrich": [/* ... */, "WithElasticApmCorrelationInfo"],
             /* ... */
-        }
-    }
-
-To define the APM server to communicate with, add the following configuration: 
-
-    {
-        "AllowedHosts": "*",
-        "ElasticApm": 
-        {
-            "ServerUrl":  "https://host.docker.internal:8200",
-            "LogLevel":  "Information",
-            "VerifyServerCert": false
         }
     }
