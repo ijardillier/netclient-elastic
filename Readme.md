@@ -27,8 +27,10 @@
   - [Elastic APM Implementation](#elastic-apm-implementation)
     - [Profiler auto instrumentation](#profiler-auto-instrumentation)
     - [NuGet](#nuget)
-    - [Zero code change setup](#zero-code-change-setup)
-    - [.Net Core NuGet setup](#net-core-nuget-setup)
+      - [Zero code change setup](#zero-code-change-setup)
+      - [.Net Core NuGet setup](#net-core-nuget-setup)
+  - [Sending traces to Elasticsearch](#sending-traces-to-elasticsearch)
+  - [Analyse traces in Kibana](#analyse-traces-in-kibana)
 
 # Context
 
@@ -653,7 +655,7 @@ But, in our case, we don't need any feature provided by the Profiler auto instru
 
 ### NuGet
 
-### Zero code change setup
+#### Zero code change setup
 
 As we use .Net 6, we can also use the "zero code change" to integrate NuGet and be able to use NuGet features without changing any code. This is available when using .Net Core and .Net 5+. 
 
@@ -715,7 +717,7 @@ To do this, just add the following environment variables in the Dockerfile:
 
 But, with this implementation, we won't be able to make correlation with logs by adding transaction id and span id. 
 
-### .Net Core NuGet setup
+#### .Net Core NuGet setup
 
 So, we will prefer using NuGet integration, adding logs correlation, and be able to choose the features to integrate.
 
@@ -761,3 +763,53 @@ To add the transaction id and trace id to every Serilog log message that is crea
             /* ... */
         }
     }
+
+## Sending traces to Elasticsearch
+
+The configuration has already been seen in the previous section.
+
+You just have to ensure you have a APM server available (this is now done with an elastic-agent with an APM integration in Fleet).
+
+## Analyse traces in Kibana
+
+First thing we can check, the correlation ids for logs. As our application is very simple, we won't have span but we can see transaction id in Discover for our applications logs.
+
+![Logs correlation ids on Discover](Logs_Correlation_Discover.png)
+
+Then, on the APM App on Kibana, we have a lot of information thanks to our traces.
+
+- APM Inventory which gives the list of all services that send traces:
+
+![APM Inventory](APM_Inventory.png)
+
+- APM Service Map which display a map with our services (in case of complexe architecture, it is easy to see dependencies between services):
+
+![APM Service map](APM_ServiceMap.png)
+
+- APM Overview which gives an overview of all information about traces:
+
+![APM Overview](APM_Overview.png)
+
+- APM Transactions which gives information about all transactions coming from our services:
+
+![APM Transactions](APM_Transactions.png)
+
+- APM Dependencies which list all dependencies of the current service:
+
+![APM Dependencies](APM_Dependencies.png)
+
+- APM Errors which list all errors not catched by our service:
+
+![APM Errors](APM_Errors.png)
+
+- APM Logs which list all logs for the current service:
+
+![APM Logs](APM_Logs.png)
+
+An interesting view is the trace sample on the Transactions view. You can view the detailed trace for a transaction:
+
+![APM Transactions - Trace timeline](APM_TransactionsTraceTimeline.png)
+
+And you can also see related logs:
+
+![APM Transactions - Trace logs](APM_TransactionsTraceLogs.png)
