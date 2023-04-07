@@ -712,7 +712,7 @@ To do this, just add the following environment variables in the Dockerfile:
 
     # ...
 
-But, with this implementation, we won't be able to make correlation with logs by adding transaction id and span id. 
+But, with this implementation, we won't be able to make correlation with logs by adding transaction id and trace id. 
 
 ### NuGet - .Net Core  setup
 
@@ -769,7 +769,7 @@ You just have to ensure you have an APM server available (this is now done with 
 
 ## Analyse traces in Kibana
 
-First thing we can check, the correlation ids for logs. As our application is very simple, we won't have span but we can see transaction id in Discover for our applications logs.
+First thing we can check, the correlation ids for logs.
 
 ![Logs correlation ids on Discover](Logs_Correlation_Discover.png)
 
