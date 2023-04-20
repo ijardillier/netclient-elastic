@@ -750,6 +750,8 @@ To define the APM server to communicate with, add the following configuration in
         }
     }
 
+See [this page](https://www.elastic.co/guide/en/apm/agent/dotnet/current/config-all-options-summary.html) for all options available.
+
 To add the transaction id and trace id to every Serilog log message that is created during a transaction, you just add to update your configuration in the appsettings.json file:
 
     {
