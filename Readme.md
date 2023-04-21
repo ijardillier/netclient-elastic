@@ -21,13 +21,14 @@
   - [Business metrics](#business-metrics)
   - [Sending metrics to Elasticsearch](#sending-metrics-to-elasticsearch)
   - [Analyse metrics in Kibana](#analyse-metrics-in-kibana)
-- [Traces (via Elastic APM agent)](#traces-via-elastic-apm-agent)
-  - [What is Elastic APM agent?](#what-is-elastic-apm-agent)
+- [Traces (via Elastic APM / RUM agent)](#traces-via-elastic-apm--rum-agent)
+  - [What is Elastic APM / RUM agent?](#what-is-elastic-apm--rum-agent)
   - [Supported technologies](#supported-technologies)
-  - [Elastic APM Implementation](#elastic-apm-implementation)
+  - [Elastic APM agent implementation](#elastic-apm-agent-implementation)
     - [Profiler auto instrumentation](#profiler-auto-instrumentation)
     - [NuGet - Zero code change setup](#nuget---zero-code-change-setup)
     - [NuGet - .Net Core  setup](#nuget---net-core--setup)
+  - [Elastic RUM agent implementation](#elastic-rum-agent-implementation)
   - [Sending traces to Elasticsearch](#sending-traces-to-elasticsearch)
   - [Analyse traces in Kibana](#analyse-traces-in-kibana)
 
@@ -563,9 +564,9 @@ You can see how metrics are displayed in the Metrics Explorer App:
 
 ![Metrics on Metrics Explorer App](Metrics_Explorer.png)
 
-# Traces (via Elastic APM agent)
+# Traces (via Elastic APM / RUM agent)
 
-## What is Elastic APM agent?
+## What is Elastic APM / RUM agent?
 
 The Elastic APM .NET Agent automatically measures the performance of your application and tracks errors. It has built-in support for the most popular frameworks, as well as a simple API which allows you to instrument any application.
 
@@ -573,13 +574,25 @@ The agent auto-instruments supported technologies and records interesting events
 
 Source : [APM .Net Agent](https://www.elastic.co/guide/en/apm/agent/dotnet/current/intro.html)
 
+Real User Monitoring captures user interaction with clients such as web browsers. The JavaScript Agent is Elastic’s RUM Agent.
+
+Unlike Elastic APM backend agents which monitor requests and responses, the RUM JavaScript agent monitors the real user experience and interaction within your client-side application. The RUM JavaScript agent is also framework-agnostic, which means it can be used with any front-end JavaScript application.
+
+You will be able to measure metrics such as "Time to First Byte", domInteractive, and domComplete which helps you discover performance issues within your client-side application as well as issues that relate to the latency of your server-side application.
+
+Source : [Real User Monitoring](https://www.elastic.co/guide/en/apm/guide/current/apm-rum.html)
+
 ## Supported technologies
 
-Choosing between Profiler auto instrumentation and NuGet use will depend on your needs and supported technologies.
+For APM agent, choosing between Profiler auto instrumentation and NuGet use will depend on your needs and supported technologies.
 
 See these page for more information: [Supported technologies](https://www.elastic.co/guide/en/apm/agent/dotnet/current/supported-technologies.html)
 
-## Elastic APM Implementation
+For RUM agent, Elastic provides a JavaScript agent and adds framework-specific integrations for React, Angular and Vue.
+
+See these page for more information: [Supported technologies](https://www.elastic.co/guide/en/apm/agent/rum-js/5.x/supported-technologies.html)
+
+## Elastic APM agent implementation
 
 ### Profiler auto instrumentation
 
@@ -639,7 +652,7 @@ In our case, as we use Docker, it would be easy to add Profiler auto instrumenta
     # Reporter configuration options / Specifies the URL for your APM Server (ElasticApm:ServerUrl).
     ENV ELASTIC_APM_SERVER_URL=https://host.docker.internal:8200
     # Reporter configuration options / Specifies if the agent should verify the SSL certificate if using HTTPS connection to the APM server (ElasticApm:VerifyServerCert). 
-    ENV ELASTIC_APM_VERIFY_SERVER_CERT=false
+    ENV ELASTIC_APM_VERIFY_SERVER_CERT=false /* Testing purpuse */ 
     # Reporter configuration options / Specifies the path to a PEM-encoded certificate used for SSL/TLS by APM server (ElasticApm:ServerCert).
     # ENV ELASTIC_APM_SERVER_CERT=
 
@@ -703,7 +716,7 @@ To do this, just add the following environment variables in the Dockerfile:
     # Reporter configuration options / Specifies the URL for your APM Server (ElasticApm:ServerUrl).
     ENV ELASTIC_APM_SERVER_URL=https://host.docker.internal:8200
     # Reporter configuration options / Specifies if the agent should verify the SSL certificate if using HTTPS connection to the APM server (ElasticApm:VerifyServerCert). 
-    ENV ELASTIC_APM_VERIFY_SERVER_CERT=false
+    ENV ELASTIC_APM_VERIFY_SERVER_CERT=false /* Testing purpuse */ 
     # Reporter configuration options / Specifies the path to a PEM-encoded certificate used for SSL/TLS by APM server (ElasticApm:ServerCert).
     # ENV ELASTIC_APM_SERVER_CERT=
 
@@ -746,7 +759,7 @@ To define the APM server to communicate with, add the following configuration in
         {
             "ServerUrl":  "https://host.docker.internal:8200",
             "LogLevel":  "Information",
-            "VerifyServerCert": false
+            "VerifyServerCert": false /* Testing purpuse */ 
         }
     }
 
@@ -762,6 +775,25 @@ To add the transaction id and trace id to every Serilog log message that is crea
             /* ... */
         }
     }
+
+## Elastic RUM agent implementation
+
+For common JavaScript application, the implementation only takes a few lignes (asynchronous / non-blocking pattern):
+
+    <script>
+        ;(function(d, s, c) {
+            var j = d.createElement(s),
+            t = d.getElementsByTagName(s)[0]
+
+            j.src = 'js/elastic-apm-rum.umd.min.js'
+            j.onload = function() {elasticApm.init(c)}
+            t.parentNode.insertBefore(j, t)
+        })(document, 'script', {serviceName: 'NetClient_Elastic_Front', serverUrl: 'https://localhost:8200', environment: 'Production'})
+    </script>
+
+You can find this implementation in the source code in the sample _Layout.cshtml of the Blazor App.
+
+For frameworks like React, Angular and Vue, you can refer to [this page](https://www.elastic.co/guide/en/apm/agent/rum-js/5.x/framework-integrations.html).
 
 ## Sending traces to Elasticsearch
 
@@ -809,6 +841,14 @@ Then, on the APM App on Kibana, we have a lot of information thanks to our trace
 
 ![APM Transactions - Trace timeline](APM_TransactionsTraceTimeline.png)
 
+- The same view for JavaScript service (RUM):
+
+![APM Transactions - Trace timeline - JavaScript service](APM_TransactionsFrontJavaScriptService.png)
+
 - And you can also see related logs:
 
 ![APM Transactions - Trace logs](APM_TransactionsTraceLogs.png)
+
+- APM User Experience Dashboard:
+
+![APM User Experience Dashboard](APM_UserExperience_Dashboard.png)
